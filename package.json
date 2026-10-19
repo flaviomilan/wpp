@@ -1,0 +1,19 @@
+{
+  "name": "wpp-development",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "lint": "eslint internal/webui/assets scripts internal/webui/tests",
+    "test": "node --test --test-isolation=none internal/webui/tests/*.test.mjs scripts/*.test.mjs",
+    "coverage": "c8 --all --include='internal/webui/assets/**/*.{js,mjs}' --include='scripts/*.mjs' --exclude='**/*.test.mjs' --reporter=text --reporter=json --reporter=json-summary --reporter=lcov node --test --test-isolation=none internal/webui/tests/*.test.mjs scripts/*.test.mjs",
+    "test:browser": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "c8": "11.0.0",
+    "eslint": "10.12.0"
+  }
+}

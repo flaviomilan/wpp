@@ -1,0 +1,30 @@
+name: Problema
+description: Relate um comportamento inesperado com dados fictícios.
+body:
+  - type: markdown
+    attributes:
+      value: 'Não envie bancos, sessões, QR, mensagens ou tokens reais. Vulnerabilidades devem usar Security → Report a vulnerability, após ativação do canal privado.'
+  - type: textarea
+    id: environment
+    attributes:
+      label: Ambiente e versão
+      description: Sistema, versão do wpp, modo CLI/web e comando sanitizado.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Como reproduzir
+      description: Passos mínimos com conteúdo fictício.
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Resultado esperado e observado
+    validations:
+      required: true
+  - type: textarea
+    id: checks
+    attributes:
+      label: Logs sanitizados e validações

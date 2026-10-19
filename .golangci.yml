@@ -1,0 +1,22 @@
+version: "2"
+run:
+  timeout: 5m
+linters:
+  default: none
+  enable:
+    - govet
+    - staticcheck
+    - unused
+    - ineffassign
+    - errcheck
+    - errorlint
+    - sqlclosecheck
+    - rowserrcheck
+    - bodyclose
+    - nolintlint
+  settings:
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+  exclusions:
+    presets: []

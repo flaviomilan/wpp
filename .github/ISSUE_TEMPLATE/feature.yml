@@ -1,0 +1,16 @@
+name: Melhoria
+description: Proponha uma melhoria para uso CLI ou web.
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Qual problema você quer resolver?
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Comportamento esperado
+      description: Explique o resultado e como afeta CLI, web e dados existentes.
+    validations:
+      required: true

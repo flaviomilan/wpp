@@ -1,0 +1,13 @@
+{
+  "approved_png_sha256": {
+    "docs/images/ajustes-1440.png": "33764ddab2ecf746dfe6dd15646b3f71d29fca223478a1672723751ac2e3eea7",
+    "docs/images/ajustes-360.png": "1b56967e798e1fe8a09297855365d884fa9c33e6c288b065b939a0de388532a6",
+    "docs/images/ajustes-768.png": "a2b49ad17833a2bd8dd6ac63a05c00b68e2e4096f19e3305509e1ca4d106b977",
+    "docs/images/painel-compacto-dark.png": "0feeaac704b9c88a811df33e5abd39e64ddf9f5d1ffeca321a0e2bd1a9d57e53",
+    "docs/images/painel-dark.png": "287295d2472a7fa0384522d437f3be71d101cf8f3abc42f8890d59cf4df7d281",
+    "docs/images/painel-light.png": "46834ec0447e4e27ec93c2f3ab9657fc70a3c2933ff5650347edc73a41f25ac9"
+  },
+  "approved_fixture_sha256": {
+    "docs/examples/events-1.0.jsonl": "7c0bad739e8e5224bf68e837c2fab36b07ad1e93adfbadfee4957b7e037f7fc6"
+  }
+}

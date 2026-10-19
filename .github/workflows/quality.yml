@@ -1,0 +1,55 @@
+name: Qualidade
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  security:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - run: make tools-security
+      - run: make check-security test-security
+  quality:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+      - run: make tools
+      - run: make check build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:browser
+      - run: python3 -m unittest discover -s scripts -p 'test_*.py'
+      - run: python3 scripts/package-source.py --draft --output /tmp/wpp-source.tar.gz
+  macos:
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - run: go test -race ./...
+      - run: make build

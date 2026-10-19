@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><title>wpp · Conversas</title><link rel="stylesheet" href="/style.css"><script type="module" src="/app.js"></script></head>
+<body>
+<a id="skip-content" class="skip-link" href="#main-content">Ir para o conteúdo</a>
+<aside id="sidebar" class="sidebar" aria-label="Navegação do aplicativo">
+ <button id="close-menu" class="button secondary menu-toggle">Fechar menu</button>
+ <a class="brand" href="#groups"><span class="brand-icon">w</span><span>wpp<small>Seu arquivo de conversas</small></span></a>
+ <div class="nav-label">BIBLIOTECA</div>
+ <nav aria-label="Navegação principal">
+  <button data-view="groups" class="nav-button active">Conversas <span aria-hidden="true">☷</span></button>
+  <button data-view="audio" class="nav-button">Áudios <span aria-hidden="true">♪</span></button>
+  <button data-view="people" class="nav-button">Pessoas <span aria-hidden="true">○</span></button>
+  <button data-view="activity" class="nav-button">Atividade <span aria-hidden="true">↗</span></button>
+  <button data-view="settings" class="nav-button settings-link">Ajustes <span aria-hidden="true">⚙</span></button>
+ </nav>
+ <div class="sidebar-bottom"><span class="local-dot"></span> Arquivo local<p>Mensagens e transcrições ficam neste computador.</p></div>
+</aside>
+<main id="main-content" tabindex="-1">
+ <header class="topbar"><button id="menu-toggle" class="button secondary menu-toggle" aria-expanded="false" aria-controls="sidebar">Menu</button><span id="breadcrumb">Arquivo / Conversas</span><div class="toolbar-actions"><span id="connection-badge" class="pill neutral">Carregando…</span><button id="refresh" class="button secondary" aria-label="Atualizar dados">↻ Atualizar</button></div></header>
+ <section class="page-heading"><div><h1 id="page-title">Conversas</h1><p id="page-description">Seu histórico, com contexto e pessoas identificadas.</p></div><button id="discover" class="button secondary" data-control>Atualizar conversas</button></section>
+ <section class="service-strip" aria-label="Estado do processamento">
+  <span id="capture-summary">Captura pausada</span><span aria-hidden="true">·</span><span id="transcription-summary">Transcrição local</span>
+  <button id="open-capture" class="text-button">Controles de captura</button><button id="open-activity" class="text-button">Ver atividade</button>
+  <div id="operation-status" class="operation-status" role="status" aria-live="polite">Pronto para consultar seu arquivo.</div>
+ </section>
+ <section id="onboarding" class="onboarding hidden" aria-label="Próximo passo"><div><h2 id="onboarding-title">Seu arquivo começa aqui</h2><p id="onboarding-description"></p></div><button id="onboarding-action" class="button">Conectar conta</button></section>
+ <div id="owner-notice" class="notice hidden" role="status">Outro processo controla este diretório. Você pode consultar o arquivo, cadastrar pessoas e reenfileirar áudios elegíveis. Para controlar a captura, encerre o run ou painel proprietário e reinicie este painel. Não apague o lock.</div>
+ <div id="notice" class="notice hidden" role="status" aria-live="polite"></div>
+ <section id="groups-view">
+  <div class="stats"><div><span>Grupos</span><strong id="group-count">—</strong></div><div><span>Mensagens</span><strong id="message-count">—</strong></div><div><span>Acompanhadas</span><strong id="tracked-count">—</strong></div></div>
+  <div id="workspace" class="workspace">
+   <section class="panel conversation-list"><div class="panel-heading"><h2>Conversas</h2><span id="chat-count" class="count">0</span></div><div class="conversation-tabs" role="tablist" aria-label="Acompanhamento"><button id="tab-tracked" role="tab" aria-selected="true" aria-controls="chat-list">Acompanhadas</button><button id="tab-available" role="tab" tabindex="-1" aria-selected="false" aria-controls="chat-list">Disponíveis</button></div><div class="list-filters"><label class="search-label"><span class="sr-only">Buscar conversa</span><input id="chat-search" type="search" placeholder="Buscar conversa"></label><select id="chat-filter" aria-label="Mostrar conversas"><option value="all">Todos os tipos</option><option value="groups">Grupos</option><option value="contacts">Contatos</option></select></div><div id="chat-list" class="chat-list" role="tabpanel" aria-labelledby="tab-tracked"></div></section>
+   <section class="panel messages-panel">
+    <button id="back-to-list" class="text-button back-to-list">← Voltar às conversas</button>
+    <div class="panel-heading conversation-heading"><div><h2 id="conversation-title">Selecione uma conversa</h2><details class="identity-details"><summary>Identificador da conversa</summary><p id="conversation-id" class="identifier"></p></details></div><div class="conversation-actions"><button id="track-chat" class="button secondary" data-control disabled>Acompanhar</button><button id="sync-chat" class="button" data-control disabled>Sincronizar agora</button></div></div>
+    <div class="conversation-links"><button id="open-people" class="text-button hidden">Pessoas desta conversa</button><button id="export-chat" class="text-button" data-control disabled>Exportar JSONL</button><span class="muted coverage">Cobertura do histórico não confirmada</span></div>
+    <form id="message-search-form" class="message-toolbar"><input id="message-search" type="search" placeholder="Buscar mensagens e transcrições" aria-label="Buscar mensagens"><select id="person-filter" aria-label="Filtrar por remetente"><option value="">Todos os remetentes</option></select><button class="button secondary">Buscar</button></form>
+    <button id="new-messages" class="new-messages hidden">Novas mensagens disponíveis · Mostrar</button>
+    <div id="messages" class="messages"><div class="empty-state">Escolha uma conversa para explorar o histórico.<p>Conecte a conta em Ajustes para descobrir mais conversas.</p></div></div>
+    <div class="pagination"><button id="messages-prev" class="button secondary" disabled>← Anteriores</button><span id="message-page">—</span><button id="messages-next" class="button secondary" disabled>Próximas →</button></div>
+   </section>
+  </div>
+ </section>
+ <section id="audio-view" class="hidden">
+  <div class="panel"><div class="panel-heading"><div><h2>Fila de transcrição</h2><p id="audio-summary" class="muted"></p></div><span class="pill neutral">Áudios temporários</span></div>
+   <div id="audio-current" class="helper" role="status"></div>
+   <p class="helper"><button id="audio-settings" class="text-button">Configurar transcrição</button></p>
+   <div class="filter-row"><label for="audio-chat">Conversa<select id="audio-chat"><option value="">Todas as conversas</option></select></label><label for="audio-state">Estado<select id="audio-state"><option value="">Todos os estados</option><option value="pending">Na fila</option><option value="processing">Em processamento</option><option value="done">Concluídos</option><option value="failed">Falhas</option><option value="waiting_metadata">Aguardando metadados</option><option value="cancelled">Cancelados</option></select></label></div>
+   <p class="helper">Confira as transcrições aqui. Os áudios são temporários; o texto e suas referências são preservados.</p>
+   <div id="audio-cards" class="audio-cards" aria-label="Áudios e transcrições"></div>
+   <div class="pagination"><button id="audio-prev" class="button secondary" disabled>← Anteriores</button><span id="audio-page">—</span><button id="audio-next" class="button secondary" disabled>Próximas →</button></div>
+  </div>
+ </section>
+ <section id="people-view" class="hidden">
+  <div class="panel"><div class="panel-heading"><div><h2>Cadastro de pessoas</h2><p class="muted">Os nomes ajudam a reconhecer os autores em todos os grupos.</p></div><button id="add-person" class="button">Cadastrar pessoa</button></div>
+   <div class="filter-row"><label>Grupo<select id="people-group"></select></label><label>Buscar pessoa<input id="people-search" type="search" placeholder="Nome, número ou LID"></label></div>
+   <p class="helper">Pessoas conhecidas pelo histórico. Esta lista não certifica os participantes atuais.</p>
+   <div class="table-scroll"><table><thead><tr><th>Pessoa</th><th>Nome recebido</th><th>Nome cadastrado</th><th></th></tr></thead><tbody id="people-rows"></tbody></table></div>
+  </div>
+ </section>
+ <section id="activity-view" class="hidden">
+  <section class="panel"><div class="panel-heading"><div><h2>Atividade recente</h2><p class="muted">Etapas reais das operações deste arquivo. Conclusão não certifica histórico integral.</p></div></div><div id="recent-operations" class="operations-list"></div></section>
+ </section>
+ <section id="settings-view" class="hidden">
+  <nav class="settings-nav" aria-label="Categorias de ajustes">
+   <button data-category="account" id="category-account">Conta</button><button data-category="capture" id="category-capture">Captura</button><button data-category="transcription" id="category-transcription">Transcrição</button><button data-category="data" id="category-data">Dados e exportação</button><button data-category="advanced" id="category-advanced">Avançado</button>
+  </nav>
+  <div class="settings-grid">
+   <section id="settings-account" class="panel settings-category"><div class="panel-heading"><div><h2>Conta WhatsApp</h2><p id="account-status" class="muted">Consultando a sessão…</p></div><button id="pair-account" class="button" data-control>Conectar WhatsApp</button></div><div class="panel-content"><p class="helper">Vincule uma conta pelo celular. Mensagens e sessão ficam neste computador.</p></div><div id="qr-area" class="qr-area hidden"><img id="pair-qr" alt="QR code para vincular o WhatsApp"><p>No celular: WhatsApp → Dispositivos conectados → Conectar dispositivo.</p><button id="cancel-pair" class="button secondary">Cancelar conexão</button></div></section>
+   <section id="settings-capture" class="panel settings-category hidden"><div class="panel-heading"><h2>Captura</h2></div><div class="panel-content">
+    <label class="switch-label"><input id="capture-toggle" type="checkbox" role="switch" data-control><span>Captura contínua<small id="capture-caption">Pausada</small></span></label>
+    <p class="helper">Recebe mensagens das conversas acompanhadas e tenta recuperar o histórico disponível. Para buscar uma conversa pontualmente, use Sincronizar agora na conversa.</p>
+    <p class="helper">Fechar a aba mantém o processamento enquanto o programa estiver ativo. Ctrl+C ou SIGTERM encerra o processo. Para operar sem navegador, use a CLI com <code>wpp run</code>; um supervisor externo pode mantê-la em background.</p>
+   </div></section>
+   <section id="settings-transcription" class="panel settings-category hidden"><div class="panel-heading"><div><h2>Transcrição local</h2><p id="engine-status" class="muted">Consultando motor…</p></div></div><div class="panel-content">
+    <label class="switch-label"><input id="transcription-toggle" type="checkbox" role="switch" data-control><span>Transcrição automática<small id="transcription-caption">Todas as conversas acompanhadas</small></span></label>
+    <p class="helper">Whisper e FFmpeg são locais. A captura de texto funciona mesmo sem o motor. Pausar deixa o áudio atual terminar.</p>
+    <form id="settings-form">
+     <label>Idioma<input id="setting-language" list="languages" required><datalist id="languages"><option value="pt">Português</option><option value="auto">Detectar automaticamente</option><option value="en">Inglês</option><option value="es">Espanhol</option></datalist></label>
+     <label>Nomes e termos específicos<textarea id="setting-vocabulary" rows="3" placeholder="Ex.: Mariana, Aurora, homologação"></textarea></label>
+     <details class="advanced-settings"><summary>Modelo e opções avançadas</summary>
+      <label>Modelo instalado<input id="setting-model" required></label><label>Executável Whisper<input id="setting-whisper" required></label><label>Executável FFmpeg<input id="setting-ffmpeg" required></label>
+      <div class="field-pair"><label>Threads<input id="setting-threads" type="number" min="0" max="256" required></label><label>Tempo limite por áudio<input id="setting-timeout" placeholder="30m" required></label></div>
+      <p class="helper">Zero threads usa até 8 CPUs disponíveis. Use caminhos absolutos em instalações personalizadas.</p>
+     </details>
+     <p class="helper">As mudanças valem para os próximos áudios. Confira trechos incertos nas transcrições automáticas.</p>
+     <p id="settings-feedback" class="settings-feedback" role="status" aria-live="polite"></p><button id="save-settings" class="button" data-control>Salvar ajustes</button>
+    </form>
+   </div></section>
+   <section id="settings-data" class="panel settings-category hidden"><div class="panel-heading"><h2>Dados e exportação</h2><button id="export-all" class="button secondary" data-control>Exportar todas</button></div><div class="panel-content">
+    <p>Reconstrua os arquivos JSONL a partir do SQLite, sem conectar ao WhatsApp. A exportação completa não confirma lotes nem avança o cursor do consumidor.</p>
+    <p class="helper">Para mudar diretórios, endereço do painel ou fuso, encerre o programa e reinicie com <code>--data-dir</code>, <code>--export-dir</code>, <code>--listen</code> ou <code>--timezone</code> antes do comando.</p>
+    <p class="helper">Faça backup do diretório de dados e dos exports com o processo encerrado. A sessão é privada e vinculada a uma conta. Não publique bancos, mensagens, sessões ou exports no GitHub.</p>
+   </div></section>
+   <section id="settings-advanced" class="settings-category hidden">
+    <details id="inspector-details" class="panel advanced-settings"><summary>Banco de dados · Somente consulta</summary><section id="database-view">
+     <p class="helper">Tabelas permitidas da aplicação. Não oferece SQL livre ou edição. Credenciais e metadados privados de mídia ficam fora do inspetor.</p>
+     <div class="filter-row"><label>Tabela<select id="table-select"></select></label><p id="table-description" class="muted"></p></div>
+     <div class="table-scroll database-table"><table><thead id="table-head"></thead><tbody id="table-rows"></tbody></table></div>
+     <div class="pagination"><button id="table-prev" class="button secondary" disabled>← Anteriores</button><span id="table-page">—</span><button id="table-next" class="button secondary" disabled>Próximas →</button></div>
+    </section></details>
+   </section>
+  </div>
+ </section>
+</main>
+<dialog id="person-dialog" aria-labelledby="person-dialog-title"><form id="person-form"><div class="dialog-heading"><h2 id="person-dialog-title">Identificar pessoa</h2><button type="button" id="close-person" class="icon-button" aria-label="Fechar">×</button></div><p class="muted">O cadastro é local e preserva a autoria original.</p><label>Identificador WhatsApp<input id="person-id" required placeholder="5511999999999@s.whatsapp.net"></label><label>Nome cadastrado<input id="person-name" maxlength="128" placeholder="Ex.: Maria · Financeiro"></label><p class="helper">Nome vazio remove um cadastro existente.</p><div id="person-error" class="form-error" role="alert"></div><div class="dialog-actions"><button type="button" id="cancel-person" class="button secondary">Cancelar</button><button id="save-person" class="button">Salvar cadastro</button></div></form></dialog>
+<dialog id="record-dialog" aria-labelledby="record-dialog-title"><div class="dialog-heading"><h2 id="record-dialog-title">Detalhes do registro</h2><button id="close-record" class="icon-button" aria-label="Fechar registro">×</button></div><pre id="record-content"></pre><p class="helper">Campos extensos podem exibir uma prévia limitada.</p></dialog>
+<dialog id="message-detail" class="message-detail" aria-labelledby="detail-title"><div class="dialog-heading"><h2 id="detail-title">Mensagem original</h2><button id="close-detail" class="icon-button" aria-label="Fechar mensagem">×</button></div><p id="detail-author" class="muted"></p><div id="detail-body" class="detail-body"></div><div class="dialog-actions"><button id="copy-transcript" class="button secondary hidden">Copiar transcrição</button></div><p id="copy-status" role="status" class="muted"></p><details class="identity-details"><summary>Identificadores técnicos</summary><pre id="detail-identifiers"></pre></details></dialog>
+<dialog id="unsaved-dialog" aria-labelledby="unsaved-title"><h2 id="unsaved-title">Ajustes não salvos</h2><p>Você alterou a transcrição. Continue editando ou descarte as alterações para sair.</p><div class="dialog-actions"><button id="keep-editing" class="button">Continuar editando</button><button id="discard-settings" class="button secondary">Descartar alterações</button></div></dialog>
+</body></html>

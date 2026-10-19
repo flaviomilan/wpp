@@ -1,0 +1,19 @@
+[Unit]
+Description=wpp - captura local de conversas
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=simple
+WorkingDirectory=%h/.local/share/wpp
+ExecStart=%h/.local/bin/wpp --data-dir %h/.local/share/wpp/data --export-dir %h/.local/share/wpp/exports run
+Restart=on-failure
+RestartSec=10
+TimeoutStopSec=60
+KillSignal=SIGTERM
+UMask=0077
+
+[Install]
+WantedBy=default.target
