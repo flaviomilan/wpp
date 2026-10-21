@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"time"
 	"wpp/internal/archive"
+	"wpp/internal/localization"
 )
 
 type Downloader interface {
@@ -43,25 +44,25 @@ func (w Worker) ProcessOne(ctx context.Context, root string) (worked bool, resul
 	}
 	dir, dirErr := os.MkdirTemp(root, "job-")
 	if dirErr != nil {
-		return true, w.release(*job, "falha ao preparar diretório temporário", ctx.Err() != nil)
+		return true, w.release(*job, "backend.failed_to_prepare_temporary_directory", ctx.Err() != nil)
 	}
 	defer func() {
 		if err := os.RemoveAll(dir); err != nil {
-			resultErr = errors.Join(resultErr, errors.New("falha ao limpar áudio temporário"), err)
+			resultErr = errors.Join(resultErr, localization.New("backend.failed_to_clean_up_temporary_audio"), err)
 		}
 	}()
 	phaseErr := w.phase(*job, "downloading")
 	if phaseErr != nil {
-		return true, errors.Join(phaseErr, w.release(*job, "falha ao persistir etapa", true))
+		return true, errors.Join(phaseErr, w.release(*job, "backend.failed_to_save_processing_phase", true))
 	}
 	transcript, detail, err := w.process(ctx, dir, *job)
 	if err == nil && ctx.Err() != nil {
-		err, detail = ctx.Err(), "transcrição interrompida"
+		err, detail = ctx.Err(), "backend.transcription_interrupted"
 	}
 	if err == nil {
 		err = w.phase(*job, "saving")
 		if err == nil && ctx.Err() != nil {
-			return true, w.release(*job, "transcrição interrompida", true)
+			return true, w.release(*job, "backend.transcription_interrupted", true)
 		}
 		if err == nil {
 			err = w.Store.CompleteAudio(*job, transcript)
@@ -69,7 +70,7 @@ func (w Worker) ProcessOne(ctx context.Context, root string) (worked bool, resul
 		if err != nil {
 			err = &archive.PersistenceError{Err: err}
 		}
-		detail = "falha ao persistir transcrição"
+		detail = "backend.failed_to_save_transcription"
 	}
 	if err != nil {
 		if e := w.release(*job, detail, ctx.Err() != nil || errors.Is(err, archive.ErrAudioOffline)); e != nil {
@@ -99,7 +100,7 @@ func (w Worker) phase(job archive.AudioJob, phase string) error {
 func (w Worker) process(ctx context.Context, dir string, job archive.AudioJob) (archive.Transcript, string, error) {
 	var result archive.Transcript
 	if ctx.Err() != nil {
-		return result, "processamento interrompido", ctx.Err()
+		return result, "backend.transcription_interrupted", ctx.Err()
 	}
 	processing, cancel := context.WithTimeout(ctx, w.Timeout)
 	defer cancel()
@@ -108,17 +109,17 @@ func (w Worker) process(ctx context.Context, dir string, job archive.AudioJob) (
 	err := w.Download.DownloadAudio(download, job.Metadata, audio)
 	cancelDownload()
 	if err != nil {
-		return result, "download indisponível ou interrompido", err
+		return result, "backend.download_unavailable_or_interrupted", err
 	}
 	info, err := os.Stat(audio)
 	if err != nil || info.Size() > 64*1024*1024 {
-		return result, "áudio inválido ou acima de 64 MiB", errors.New("arquivo inválido")
+		return result, "backend.invalid_audio_or_larger_than_64_mib", localization.New("backend.invalid_file")
 	}
 	if err = w.phase(job, "transcribing"); err != nil {
-		return result, "falha ao persistir etapa", err
+		return result, "backend.failed_to_save_processing_phase", err
 	}
 	if ctx.Err() != nil {
-		return result, "processamento interrompido", ctx.Err()
+		return result, "backend.transcription_interrupted", ctx.Err()
 	}
 	if engine, ok := w.Engine.(interface {
 		TranscribePhased(context.Context, string, string, func(string)) (archive.Transcript, error)
@@ -137,7 +138,7 @@ func (w Worker) process(ctx context.Context, dir string, job archive.AudioJob) (
 		result, err = w.Engine.Transcribe(processing, audio, dir)
 	}
 	if err != nil {
-		return result, "transcrição falhou, expirou ou não reconheceu fala", err
+		return result, "backend.transcription_failed_timed_out_or_did_not_recognize_speech", err
 	}
 	return result, "", nil
 }

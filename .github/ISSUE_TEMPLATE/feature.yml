@@ -1,16 +1,16 @@
-name: Melhoria
-description: Proponha uma melhoria para uso CLI ou web.
+name: Feature request
+description: Propose an improvement to CLI or web usage.
 body:
   - type: textarea
     id: problem
     attributes:
-      label: Qual problema você quer resolver?
+      label: What problem would this solve?
     validations:
       required: true
   - type: textarea
     id: outcome
     attributes:
-      label: Comportamento esperado
-      description: Explique o resultado e como afeta CLI, web e dados existentes.
+      label: Expected behavior
+      description: Explain the result and its effect on CLI, web, and existing data.
     validations:
       required: true

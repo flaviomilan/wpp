@@ -1,38 +1,38 @@
-# Segurança
+# Security
 
-O wpp armazena dados privados de uma conta WhatsApp. A interface HTTP é local (loopback), com proteções de Host, cookie e origem; ela não oferece acesso remoto autenticado. Não exponha o painel por proxy/túnel como se houvesse controle de acesso remoto.
+wpp stores private data from one WhatsApp account. HTTP is local (loopback), protected by Host, cookie, and origin checks; it does not provide authenticated remote access. Do not expose the panel through proxies/tunnels as if it had remote access control.
 
-## Relatar vulnerabilidades
+## Reporting vulnerabilities
 
-O responsável é [Flávio Milan (@flaviomilan)](https://github.com/flaviomilan), mantenedor de [flaviomilan/wpp](https://github.com/flaviomilan/wpp). O canal escolhido é o **Private vulnerability reporting do GitHub**, sem necessidade de e-mail pessoal publicado.
+The responsible maintainer is [Flávio Milan (@flaviomilan)](https://github.com/flaviomilan) of [flaviomilan/wpp](https://github.com/flaviomilan/wpp). The chosen channel is **GitHub private vulnerability reporting**, without requiring a public personal email address.
 
-Abra [Security → Report a vulnerability](https://github.com/flaviomilan/wpp/security/advisories/new) para relatar de forma privada ao mantenedor, quando o recurso estiver habilitado. Descreva versão, sistema, reprodução mínima com conteúdo fictício e impacto observado. **Não anexe bancos, sessões, QR, tokens, mensagens ou exports reais. Não abra uma issue pública com detalhes exploráveis.**
+Use [Security > Report a vulnerability](https://github.com/flaviomilan/wpp/security/advisories/new) to report privately when enabled. Include version, system, a minimal reproduction with fictitious content, and observed impact. **Do not attach real databases, sessions, QR codes, tokens, messages, or exports. Do not open a public issue with exploitable details.**
 
-Se o formulário não estiver disponível, abra somente uma [issue solicitando ativação do canal privado](https://github.com/flaviomilan/wpp/issues/new), sem descrever a vulnerabilidade nem fornecer dados sensíveis. Aguarde a ativação para enviar os detalhes. Esse pedido público não é o relato privado.
+If the form is unavailable, open only an [issue requesting activation of the private channel](https://github.com/flaviomilan/wpp/issues/new), without describing the vulnerability or including sensitive data. Wait for activation before sending details. This public activation request is not a private vulnerability report.
 
-## Preparação do repositório
+## Repository preparation
 
-O repositório permanece privado. Antes de anunciar o projeto publicamente, o mantenedor deve ativar **Private vulnerability reporting** em **Settings → Advanced Security**, se disponível, e testar o formulário com outra conta. A existência deste documento não comprova que o canal esteja ativo.
+The repository remains private during launch preparation. Before announcing it publicly, the maintainer must enable **Private vulnerability reporting** under **Settings > Advanced Security**, when available, and test the form from another account. This document does not establish that reporting is enabled.
 
-[Como relatar privadamente](https://docs.github.com/en/code-security/how-tos/report-and-fix-vulnerabilities/report-privately) e [como habilitar o recurso](https://docs.github.com/en/code-security/how-tos/report-and-fix-vulnerabilities/configure-vulnerability-reporting/configure-for-a-repository).
+See GitHub's [private reporting instructions](https://docs.github.com/en/code-security/how-tos/report-and-fix-vulnerabilities/report-privately) and [repository configuration instructions](https://docs.github.com/en/code-security/how-tos/report-and-fix-vulnerabilities/configure-vulnerability-reporting/configure-for-a-repository).
 
-Apenas a versão atual é alvo de manutenção durante esta preparação. Não há prazo de resposta ou histórico de releases públicos anunciado. Quando houver versões públicas, esta política deve identificar as versões atendidas.
+Only the current version is maintained during preparation. No response deadline or public release history is announced. Once public versions exist, this policy must identify supported versions.
 
-## Dados e dependências
+## Data and dependencies
 
-Mantenha banco/sessão e exports fora do repositório e faça backup com o processo parado. Logs e screenshots também podem conter dados privados. Use diretórios fictícios isolados para testes. Confira as licenças/avisos de dependências antes de redistribuir binários, motores de transcrição ou modelos.
+Keep databases, sessions, and exports outside version control, and back up with the process stopped. Logs and screenshots can also contain private data. Test in isolated fictitious directories. Check dependency notices/licenses before redistributing binaries, transcription engines, or models.
 
-## Barreiras de publicação
+## Publication barriers
 
-A lista positiva `release-files.txt`, as aprovações por hash e o validador de publicação são compartilhados por hooks, CI e empacotamento. O `pre-commit` lê os blobs do índice; o `pre-push` verifica todos os commits alcançáveis pelas referências enviadas, seus metadados e mensagens de tags anotadas. Clones rasos são recusados, e `git replace` não pode substituir os objetos examinados. Não basta apagar um segredo no commit seguinte. Autores, committers e taggers devem usar endereços GitHub `noreply`.
+`release-files.txt`, hash approvals, and the publication validator are shared by hooks, CI, and packaging. `pre-commit` reads staged blobs; `pre-push` checks every commit reachable from pushed references, commit metadata, and annotated tag messages. Shallow clones are rejected and `git replace` cannot substitute inspected objects. Deleting a secret in the next commit is insufficient. Authors, committers, and taggers must use GitHub `noreply` addresses.
 
-O Gitleaks é fixado em versão e checksums, mantém suas regras padrão, verifica também conteúdo decodificado e não aceita comentários de supressão. Ferramenta indisponível, versão incorreta ou erro de execução bloqueiam a publicação. Os candidatos são examinados em diretório temporário restrito, e seus conteúdos e achados não são impressos nem enviados como artefatos da CI. O pacote de fontes usa os mesmos bytes validados, sem reler arquivos depois da auditoria.
+Gitleaks is pinned by version and checksums, retains its default rules, scans decoded content, and rejects suppression comments. An unavailable/incorrect scanner or execution failure blocks publication. Candidates are inspected in a restricted temporary directory; contents and findings are not printed or uploaded as CI artifacts. Source packages use the exact validated bytes without rereading files after the audit.
 
-Nenhum scanner reconhece todos os nomes, telefones, mensagens ou outros dados pessoais que alguém possa inserir em um arquivo de código permitido. A revisão humana continua necessária. Hooks podem ser contornados e a CI executa após o push; portanto, essas medidas não garantem impedir qualquer vazamento antes que alcance o GitHub. Não dependemos de recursos pagos de secret protection. Esta proteção da publicação não substitui uma auditoria da aplicação em execução.
+No scanner recognizes every name, phone number, message, or other personal information inserted into an allowed source file. Human review remains necessary. Hooks can be bypassed and CI runs after push, so these measures cannot guarantee prevention of every leak before GitHub receives it. Paid secret protection is not required. Publication protection does not replace a runtime application audit.
 
-## Se ocorrer exposição
+## If exposure occurs
 
-1. Interrompa pushes e distribuições. Não copie o valor encontrado para issues, logs, comentários ou relatórios públicos.
-2. Revogue ou rotacione credenciais afetadas antes de limpar o histórico. Para dados pessoais, avalie quem teve acesso e o procedimento de incidente aplicável.
-3. Remova o material de todas as referências afetadas e verifique um clone novo. Substituir o histórico altera hashes: colaboradores devem clonar novamente para evitar reintroduzir commits antigos.
-4. Cópias locais, forks, artefatos, referências de pull requests e caches podem sobreviver à reescrita. Quando houver dados sensíveis já publicados, siga a [orientação do GitHub para remoção](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository), inclusive contato privado com o suporte quando necessário. Não envie dados ao suporte automaticamente.
+1. Stop pushes and distribution. Do not copy the exposed value into issues, logs, comments, or public reports.
+2. Revoke or rotate affected credentials before cleaning history. For personal information, assess access and the applicable incident procedure.
+3. Remove material from all affected references and check a fresh clone. Rewriting changes hashes; contributors should reclone to avoid restoring old commits.
+4. Local copies, forks, artifacts, pull-request references, and caches can survive rewriting. For published sensitive data, follow [GitHub's removal guidance](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository), including private support contact when needed. Do not send data to support automatically.

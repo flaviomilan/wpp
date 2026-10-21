@@ -45,7 +45,7 @@ type waTransport struct {
 func openWhatsApp(ctx context.Context, dir string, store *archive.Store) (Transport, error) {
 	client, err := whatsapp.Open(ctx, dir, store, func(string) {})
 	if err != nil {
-		return nil, invalid("Não foi possível abrir a sessão local.")
+		return nil, invalid("backend.could_not_open_the_local_session")
 	}
 	return newWhatsAppTransport(client), nil
 }
@@ -99,16 +99,16 @@ func (t *waTransport) Connected() bool      { return t.connection.IsConnected() 
 func (t *waTransport) Events() <-chan Event { return t.events }
 func (t *waTransport) Connect(ctx context.Context) error {
 	if !t.Session() {
-		return invalid("Conecte a conta pelo QR code para continuar.")
+		return invalid("backend.link_your_account_using_the_qr_code_to_continue")
 	}
 	if t.Connected() {
 		return nil
 	}
 	if t.failed.Load() {
-		return invalid("A conexão foi recusada. Conecte novamente a conta.")
+		return invalid("backend.the_connection_was_refused_link_your_account_again")
 	}
 	if err := t.connection.ConnectContext(ctx); err != nil {
-		return invalid("Não foi possível conectar ao WhatsApp.")
+		return invalid("backend.could_not_connect_to_whatsapp")
 	}
 	tick := time.NewTicker(100 * time.Millisecond)
 	defer tick.Stop()
@@ -119,13 +119,13 @@ func (t *waTransport) Connect(ctx context.Context) error {
 			return nil
 		}
 		if t.failed.Load() {
-			return invalid("A conexão foi recusada pelo WhatsApp.")
+			return invalid("backend.whatsapp_refused_the_connection")
 		}
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-timeout.C:
-			return invalid("O WhatsApp não respondeu. Tente conectar novamente.")
+			return invalid("backend.whatsapp_did_not_respond_try_connecting_again")
 		case <-tick.C:
 		}
 	}
@@ -136,10 +136,10 @@ func (t *waTransport) Pair(ctx context.Context, code func(string)) error {
 	}
 	qr, err := t.connection.GetQRChannel(ctx)
 	if err != nil {
-		return invalid("Não foi possível preparar o QR code.")
+		return invalid("backend.could_not_prepare_the_qr_code")
 	}
 	if err = t.connection.ConnectContext(ctx); err != nil {
-		return invalid("Não foi possível iniciar o pareamento.")
+		return invalid("backend.could_not_start_pairing")
 	}
 	for {
 		select {
@@ -147,7 +147,7 @@ func (t *waTransport) Pair(ctx context.Context, code func(string)) error {
 			return ctx.Err()
 		case item, ok := <-qr:
 			if !ok {
-				return invalid("QR code expirado. Solicite outro para continuar.")
+				return invalid("backend.qr_code_expired_request_another_to_continue")
 			}
 			switch item.Event {
 			case "code":
@@ -156,7 +156,7 @@ func (t *waTransport) Pair(ctx context.Context, code func(string)) error {
 				t.session.Store(true)
 				return nil
 			case "timeout", "error":
-				return invalid("QR code expirado ou recusado. Solicite outro.")
+				return invalid("backend.qr_expired_or_refused")
 			}
 		}
 	}

@@ -25,7 +25,7 @@ export function moduleInfo(source) {
     };}}}}},
     rules:{"inventory/collect":"error"}
   }]);
-  if(messages.length)throw new Error("JavaScript inválido: "+messages.map(message=>message.message).join("; "));
+  if(messages.length)throw new Error("Invalid JavaScript: "+messages.map(message=>message.message).join("; "));
   return info;
 }
 
@@ -34,10 +34,10 @@ export function moduleUsage(sources, entry) {
   const reachable=new Set(),used=new Map();
   function visit(path){
     if(reachable.has(path))return;
-    const module=modules.get(path);if(!module)throw new Error("Módulo importado ausente: "+path);
+    const module=modules.get(path);if(!module)throw new Error("Missing imported module: "+path);
     reachable.add(path);
     for(const item of module.imports){
-      if(!item.path.startsWith("."))throw new Error("O painel deve usar imports locais: "+item.path);
+      if(!item.path.startsWith("."))throw new Error("The panel must use local imports: "+item.path);
       const target=resolve(dirname(path),item.path);
       used.set(target,new Set([...(used.get(target)||[]),...item.names]));
       visit(target);
@@ -45,9 +45,9 @@ export function moduleUsage(sources, entry) {
   }
   visit(resolve(entry));
   for(const [path,module] of modules){
-    if(!reachable.has(path))throw new Error("Módulo sem uso pelo painel: "+path);
+    if(!reachable.has(path))throw new Error("Module unused by the panel: "+path);
     for(const item of module.exports){
-      if(!item.localRead&&!used.get(path)?.has(item.name)&&!used.get(path)?.has("*"))throw new Error("Export sem uso pelo painel: "+path+" · "+item.name);
+      if(!item.localRead&&!used.get(path)?.has(item.name)&&!used.get(path)?.has("*"))throw new Error("Export unused by the panel: "+path+" · "+item.name);
     }
   }
 }

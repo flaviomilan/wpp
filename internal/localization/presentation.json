@@ -1,0 +1,226 @@
+{
+  "person.self": {
+    "en": "You",
+    "pt-BR": "Você"
+  },
+  "person.unknown": {
+    "en": "Unknown author",
+    "pt-BR": "Autor desconhecido"
+  },
+  "route.group": {
+    "en": "group {name}",
+    "pt-BR": "grupo {name}"
+  },
+  "route.self_named": {
+    "en": "{name} (you)",
+    "pt-BR": "{name} (você)"
+  },
+  "table.service_operations": {
+    "en": "Panel operations",
+    "pt-BR": "Operações do painel"
+  },
+  "table.audio_jobs": {
+    "en": "Audio queue (private download metadata omitted)",
+    "pt-BR": "Fila de áudio (metadados privados de download omitidos)"
+  },
+  "table.chats": {
+    "en": "Chats and tracking",
+    "pt-BR": "Conversas e acompanhamento"
+  },
+  "table.messages": {
+    "en": "Current message state",
+    "pt-BR": "Estado atual das mensagens"
+  },
+  "table.people_names": {
+    "en": "Registered names",
+    "pt-BR": "Nomes cadastrados"
+  },
+  "table.group_people": {
+    "en": "People observed per group",
+    "pt-BR": "Pessoas conhecidas por grupo"
+  },
+  "table.aliases": {
+    "en": "Alternative identities",
+    "pt-BR": "Identidades alternativas"
+  },
+  "table.attempts": {
+    "en": "Recovery attempts",
+    "pt-BR": "Tentativas de recuperação"
+  },
+  "table.changes": {
+    "en": "Message revisions",
+    "pt-BR": "Revisões de mensagens"
+  },
+  "table.source_redirects": {
+    "en": "Unified sources",
+    "pt-BR": "Fontes unificadas"
+  },
+  "table.analysis_state": {
+    "en": "Analysis cursors",
+    "pt-BR": "Cursores de análise"
+  },
+  "table.analysis_batches": {
+    "en": "Reserved and acknowledged batches",
+    "pt-BR": "Lotes reservados e confirmados"
+  },
+  "table.retired_exports": {
+    "en": "Duplicate exports",
+    "pt-BR": "Exports duplicados"
+  },
+  "table.meta": {
+    "en": "Account metadata",
+    "pt-BR": "Metadados da conta"
+  },
+  "archive.specify_source": {
+    "en": "specify a source",
+    "pt-BR": "informe uma fonte"
+  },
+  "archive.history_unconfirmed": {
+    "en": "history unconfirmed",
+    "pt-BR": "histórico sem confirmação"
+  },
+  "archive.recovery_persistence_failure": {
+    "en": "recovery persistence failure",
+    "pt-BR": "falha de persistência na recuperação"
+  },
+  "state.pending": {
+    "en": "Queued",
+    "pt-BR": "Na fila"
+  },
+  "state.waiting_metadata": {
+    "en": "Waiting for metadata",
+    "pt-BR": "Aguardando metadados"
+  },
+  "state.processing": {
+    "en": "Processing",
+    "pt-BR": "Em processamento"
+  },
+  "state.done": {
+    "en": "Completed",
+    "pt-BR": "Concluído"
+  },
+  "state.failed": {
+    "en": "Failed",
+    "pt-BR": "Falhou"
+  },
+  "state.cancelled": {
+    "en": "Cancelled",
+    "pt-BR": "Cancelado"
+  },
+  "state.unconfirmed": {
+    "en": "Unconfirmed",
+    "pt-BR": "Não confirmado"
+  },
+  "state.running": {
+    "en": "Running",
+    "pt-BR": "Em andamento"
+  },
+  "archive.history_queue_full": {
+    "en": "History responses exceeded queue capacity; the attempt remains unconfirmed.",
+    "pt-BR": "Respostas de histórico excederam a fila; tentativa ficará sem confirmação."
+  },
+  "archive.group_name_unavailable": {
+    "en": "Group name unavailable; identification by ID was preserved.",
+    "pt-BR": "Nome de grupo indisponível; a identificação por ID foi preservada."
+  },
+  "kind.text": {
+    "en": "text",
+    "pt-BR": "texto"
+  },
+  "kind.audio": {
+    "en": "audio",
+    "pt-BR": "áudio"
+  },
+  "kind.image": {
+    "en": "image",
+    "pt-BR": "imagem"
+  },
+  "kind.video": {
+    "en": "video",
+    "pt-BR": "vídeo"
+  },
+  "kind.document": {
+    "en": "document",
+    "pt-BR": "documento"
+  },
+  "kind.sticker": {
+    "en": "sticker",
+    "pt-BR": "figurinha"
+  },
+  "kind.location": {
+    "en": "location",
+    "pt-BR": "localização"
+  },
+  "kind.contact": {
+    "en": "contact",
+    "pt-BR": "contato"
+  },
+  "kind.reaction": {
+    "en": "reaction",
+    "pt-BR": "reação"
+  },
+  "kind.unavailable": {
+    "en": "unavailable",
+    "pt-BR": "indisponível"
+  },
+  "kind.unsupported": {
+    "en": "unsupported content",
+    "pt-BR": "conteúdo não interpretado"
+  },
+  "history.receiving": {
+    "en": "Receiving pending messages and requesting history from the phone.",
+    "pt-BR": "Recebendo pendências e solicitando histórico ao celular."
+  },
+  "history.interrupted": {
+    "en": "Operation interrupted; recovery remains unconfirmed.",
+    "pt-BR": "Execução interrompida; recuperação não confirmada."
+  },
+  "history.no_reference": {
+    "en": "No reference message; waiting for history or a new message before retrying.",
+    "pt-BR": "Sem mensagem de referência; aguardando histórico ou uma nova mensagem para tentar novamente."
+  },
+  "history.unavailable": {
+    "en": "History request failed or received no response; recovery remains unconfirmed.",
+    "pt-BR": "Histórico sem resposta ou com erro; recuperação não confirmada."
+  },
+  "history.no_earlier_messages": {
+    "en": "The phone returned no earlier messages; complete history remains unconfirmed.",
+    "pt-BR": "Celular não retornou mensagens anteriores; histórico integral não confirmado."
+  },
+  "history.overlap": {
+    "en": "Overlap with the previous reference observed; absence of gaps is not proven.",
+    "pt-BR": "Sobreposição com a referência anterior observada; ausência de lacunas não comprovada."
+  },
+  "history.expansion": {
+    "en": "Overlap observed; expansion of earlier history remains unconfirmed.",
+    "pt-BR": "Sobreposição observada; expansão do histórico antigo sem confirmação."
+  },
+  "archive.whatsapp_disconnected": {
+    "en": "WhatsApp disconnected",
+    "pt-BR": "WhatsApp desconectado"
+  },
+  "archive.queue_error_limit": {
+    "en": "queue error exceeds the limit",
+    "pt-BR": "erro de fila excede limite"
+  },
+  "archive.duplicate_person_names": {
+    "en": "the same person received conflicting registered names",
+    "pt-BR": "mesma pessoa recebeu nomes diferentes no cadastro"
+  },
+  "archive.export_failed_for_s": {
+    "en": "export failed for %s",
+    "pt-BR": "exportação falhou para %s"
+  },
+  "backend.qr_expired_or_refused": {
+    "en": "QR code expired or was refused. Request another.",
+    "pt-BR": "QR code expirado ou recusado. Solicite outro."
+  },
+  "backend.track_chat_before_sync": {
+    "en": "Track the chat before syncing.",
+    "pt-BR": "Ative o acompanhamento da conversa antes de sincronizar."
+  },
+  "language.usage": {
+    "en": "usage: wpp language [en|pt-BR]",
+    "pt-BR": "uso: wpp language [en|pt-BR]"
+  }
+}

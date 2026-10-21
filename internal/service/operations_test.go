@@ -6,6 +6,7 @@ import (
 	"sync"
 	"testing"
 	"wpp/internal/archive"
+	"wpp/internal/localization"
 )
 
 type faultOperations struct {
@@ -198,4 +199,31 @@ func TestQueueCancelsWaitingWorkAndPrioritizesManualRequests(t *testing.T) {
 	manualRelease()
 	automaticRelease := <-automatic
 	automaticRelease()
+}
+
+func TestLocalizedOperationMetadata(t *testing.T) {
+	op := archive.Operation{State: "running", Detail: "backend.processing_audio_completed_of_total", Total: 3, Completed: 1}
+	prepareOperation(&op)
+	if op.Detail != "Processing audio: 1 of 3." || op.DetailCode == "" {
+		t.Fatal(op)
+	}
+	if localized := localization.Text("pt-BR", op.DetailCode, op.DetailParameters); localized != "Processando áudios: 1 de 3." {
+		t.Fatal(localized)
+	}
+	// Updating presentation repeatedly preserves identifiers and named counts.
+	prepareOperation(&op)
+	if op.DetailParameters["completed"] != "1" || op.DetailParameters["total"] != "3" {
+		t.Fatal(op)
+	}
+}
+
+func TestApplicationErrorLocalizedIdentity(t *testing.T) {
+	err := invalid("backend.invalid_identifier")
+	if got := localization.Render(err, "pt-BR"); got != "Identificador inválido." {
+		t.Fatal(got)
+	}
+	var application *ApplicationError
+	if !errors.As(err, &application) || application.MessageCode() != "backend.invalid_identifier" || application.Conflict {
+		t.Fatal("lost error contract", err)
+	}
 }

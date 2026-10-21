@@ -7,7 +7,7 @@ const assets = new URL('../../assets/', import.meta.url);
 const types = {html:'text/html',css:'text/css',js:'text/javascript',mjs:'text/javascript'};
 const server = createServer(async (request, response) => {
   const name = new URL(request.url, 'http://localhost').pathname.slice(1) || 'index.html';
-  if (!/^[a-z][a-z.-]*\.(html|css|m?js)$/.test(name)) {
+  if (!/^[a-z][a-z0-9.-]*\.(html|css|m?js)$/.test(name)) {
     response.writeHead(404).end(); return;
   }
   try {

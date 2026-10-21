@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"wpp/internal/localization"
 )
 
 // EventBatchService publishes immutable reservations; consumers acknowledge only after committing.
@@ -133,7 +134,7 @@ func (b EventBatchService) Ack(group, id string) error {
 			return err
 		}
 		if !pending.Valid || pending.String != id {
-			return errors.New("lote não é o pendente esperado")
+			return localization.New("archive.batch_is_not_the_expected_pending_batch")
 		}
 		// Validate against reserved bytes, not a caller-controlled manifest. Paths use the trusted stored ID.
 		for name, want := range map[string][]byte{"events.jsonl": entry, "manifest.json": manifest} {
@@ -142,7 +143,7 @@ func (b EventBatchService) Ack(group, id string) error {
 				return err
 			}
 			if !bytes.Equal(got, want) {
-				return errors.New("lote alterado; execute events next para restaurar")
+				return localization.New("archive.batch_changed_run_events_next_to_restore_it")
 			}
 		}
 		if _, err := tx.Exec("UPDATE event_batches SET state='acked' WHERE chat=? AND id=?", group, id); err != nil {

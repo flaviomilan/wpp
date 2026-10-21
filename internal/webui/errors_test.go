@@ -32,7 +32,7 @@ func TestPublicErrorClassification(t *testing.T) {
 
 func TestEmbeddedModuleAssets(t *testing.T) {
 	handler := New(nil, "8080").Handler()
-	for _, path := range []string{"/app.js", "/api.mjs", "/dom.mjs", "/requests.mjs", "/chats.mjs", "/audio.mjs", "/people.mjs", "/settings.mjs", "/activity.mjs", "/inspector.mjs", "/navigation.mjs"} {
+	for _, path := range []string{"/messages.mjs", "/i18n.mjs", "/preferences.mjs", "/app.js", "/api.mjs", "/dom.mjs", "/requests.mjs", "/chats.mjs", "/audio.mjs", "/people.mjs", "/settings.mjs", "/activity.mjs", "/inspector.mjs", "/navigation.mjs"} {
 		request := httptest.NewRequest("GET", "http://127.0.0.1:8080"+path, nil)
 		rec := httptest.NewRecorder()
 		handler.ServeHTTP(rec, request)

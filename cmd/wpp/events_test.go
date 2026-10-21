@@ -68,13 +68,13 @@ func TestEventsCLIAndOfflineCorrection(t *testing.T) {
 	}
 	requireNoError(t, run("events", "ack", "group@g.us", "E000002"))
 	requireNoError(t, run("events", "next", "group@g.us"))
-	if !strings.Contains(out.String(), "Nenhum evento") {
+	if !strings.Contains(out.String(), "No new events") {
 		t.Fatal(out.String())
 	}
 	// Repeating an identical correction does not create another event.
 	requireNoError(t, run("audio", "correct", job.Source, correction))
 	requireNoError(t, run("events", "next", "group@g.us"))
-	if !strings.Contains(out.String(), "Nenhum evento") {
+	if !strings.Contains(out.String(), "No new events") {
 		t.Fatal("duplicate correction")
 	}
 	for _, bad := range []string{`{"text":""}`, `{"text":"x","unknown":true}`, `{"text":"x"} {"text":"y"}`, `{"text":"x","segments":[{"start_ms":-1,"end_ms":0}]}`} {

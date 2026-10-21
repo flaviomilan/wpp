@@ -9,13 +9,13 @@ export function run(command, args, options={}) {
   const {expectedStatus=0,includeStderr=false,...spawnOptions}=options;
   const result=spawnSync(command,args,{encoding:"utf8",maxBuffer:32*1024*1024,...spawnOptions});
   if(result.error)throw result.error;
-  if(result.status!==expectedStatus)throw new Error(`${command} falhou (${result.status}):\n${result.stdout}${result.stderr}`);
+  if(result.status!==expectedStatus)throw new Error(`${command} failed (${result.status}):\n${result.stdout}${result.stderr}`);
   return result.stdout+(includeStderr?result.stderr:"");
 }
 
 export function goPackages(go, runner=run) {
   const packages=runner(go,["list","-buildvcs=false","./..."]).trim().split(/\s+/).filter(name=>name&&!name.includes("/node_modules/"));
-  if(!packages.length)throw new Error("Nenhum pacote Go próprio encontrado");
+  if(!packages.length)throw new Error("No first-party Go packages found");
   return packages;
 }
 
@@ -28,7 +28,7 @@ export function cliCoverage(go, runner=run, packages=goPackages(go,runner)) {
     const options={env:{...process.env,GOCOVERDIR:counters}};
     runner(binary,["--data-dir",join(dir,"data"),"audio","status"],options);
     const failure=runner(binary,["unknown"],{...options,expectedStatus:1,includeStderr:true});
-    if(!failure.includes("Erro: comando desconhecido"))throw new Error("A CLI não informou o comando inválido");
+    if(!failure.includes("Error: unknown command"))throw new Error("The CLI did not report the invalid command");
     runner(go,["tool","covdata","textfmt","-i="+counters,"-o="+profile]);
     // Go's profile parser merges identical blocks; CLI subprocesses therefore
     // contribute without double-counting the statement denominator.
@@ -44,10 +44,10 @@ export function profileSummary(profile) {
   const blocks=new Map();
   for(const line of profile.trim().split("\n").slice(1)){
     const match=line.match(/^(.+):(\d+\.\d+,\d+\.\d+) (\d+) (\d+)$/);
-    if(!match)throw new Error("Perfil Go inválido: "+line);
+    if(!match)throw new Error("Invalid Go profile: "+line);
     const [,file,range,statements,hits]=match,key=file+":"+range;
     const previous=blocks.get(key);
-    if(previous&&previous.total!==Number(statements))throw new Error("Bloco Go incompatível: "+key);
+    if(previous&&previous.total!==Number(statements))throw new Error("Incompatible Go block: "+key);
     blocks.set(key,{file,total:Number(statements),covered:previous?.covered||Number(hits)>0});
   }
   const packages={};let covered=0,total=0;
@@ -61,27 +61,27 @@ export function profileSummary(profile) {
 
 export function goCoverage(functions, profile, expectedFiles, minimum=90) {
   const missing=expectedFiles.filter(file=>!profile.includes(file+":"));
-  if(missing.length)throw new Error("Arquivos Go omitidos: "+missing.join(", "));
+  if(missing.length)throw new Error("Omitted Go files: "+missing.join(", "));
   const rows=functions.trim().split("\n");
   const zero=rows.filter(row=>!row.startsWith("total:")&&/\s0\.0%$/.test(row));
-  if(zero.length)throw new Error("Funções Go sem teste:\n"+zero.join("\n"));
+  if(zero.length)throw new Error("Untested Go functions:\n"+zero.join("\n"));
   const total=Number(rows.find(row=>row.startsWith("total:"))?.match(/([\d.]+)%$/)?.[1]);
   const actual=profileSummary(profile).percent;
-  if(!Number.isFinite(total)||total<minimum||actual<minimum)throw new Error(`Cobertura Go ${actual}% (relatório ${total}%) abaixo de ${minimum}%`);
+  if(!Number.isFinite(total)||total<minimum||actual<minimum)throw new Error(`Go coverage ${actual}% (report ${total}%) below ${minimum}%`);
   return actual;
 }
 
 export function jsCoverage(summary, expectedFiles, minimum=90) {
   const files=Object.keys(summary).filter(file=>file!=="total");
   const missing=expectedFiles.filter(file=>!files.some(entry=>resolve(entry)===resolve(file)));
-  if(missing.length)throw new Error("Arquivos JavaScript omitidos: "+missing.join(", "));
+  if(missing.length)throw new Error("Omitted JavaScript files: "+missing.join(", "));
   for(const file of files){
     const result=summary[file];
-    if(result.functions.covered!==result.functions.total)throw new Error("Funções JavaScript sem teste: "+file);
-    if(result.lines.total>0&&result.lines.covered===0)throw new Error("JavaScript não executado: "+file);
+    if(result.functions.covered!==result.functions.total)throw new Error("Untested JavaScript functions: "+file);
+    if(result.lines.total>0&&result.lines.covered===0)throw new Error("JavaScript not executed: "+file);
   }
   const total=100*summary.total?.lines.covered/summary.total?.lines.total;
-  if(!Number.isFinite(total)||total<minimum)throw new Error(`Cobertura JavaScript ${total}% abaixo de ${minimum}%`);
+  if(!Number.isFinite(total)||total<minimum)throw new Error(`JavaScript coverage ${total}% below ${minimum}%`);
   return total;
 }
 
@@ -115,7 +115,7 @@ export function check(mode, runner=run, report=console.log) {
     const profile=readFileSync("coverage/go.out","utf8"),summary=profileSummary(profile);
     writeFileSync("coverage/go-summary.json",JSON.stringify(summary,null,2));
     for(const [name,result] of Object.entries(summary.packages))report(`${name}: ${(100*result.covered/result.total).toFixed(1)}% (${result.covered}/${result.total})`);
-    report(`Go consolidado: ${summary.percent.toFixed(2)}%`);
+    report(`Consolidated Go: ${summary.percent.toFixed(2)}%`);
     const expected=files.filter(file=>/^func\s/m.test(readFileSync(file,"utf8"))).map(file=>"wpp/"+relative(process.cwd(),file));
     goCoverage(functions,profile,expected);
   }else if(mode==="modules"){
@@ -124,7 +124,7 @@ export function check(mode, runner=run, report=console.log) {
   }else if(mode==="js"){
     const expected=sourceFiles("internal/webui/assets",[".js",".mjs"]).concat(sourceFiles("scripts",[".mjs"]));
     jsCoverage(JSON.parse(readFileSync("coverage/coverage-summary.json","utf8")),expected);
-  }else throw new Error("Verificação desconhecida: "+mode);
+  }else throw new Error("Unknown check: "+mode);
 }
 
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){

@@ -28,7 +28,7 @@ func newConnection(ctx context.Context, opts Options, store *archive.Store, even
 func (c *connectionCoordinator) open() error {
 	t, err := c.factory(c.ctx, c.dir, c.store)
 	if err != nil {
-		return invalid("Não foi possível abrir a sessão local.")
+		return invalid("backend.could_not_open_the_local_session")
 	}
 	c.mu.Lock()
 	c.client = t
@@ -82,7 +82,7 @@ func (c *connectionCoordinator) acquire(ctx context.Context, connect bool) (Tran
 	t, blocked, refs := c.client, c.blocked, c.refs
 	if blocked && connect {
 		c.mu.Unlock()
-		return nil, nil, invalid("Conecte novamente a conta para continuar.")
+		return nil, nil, invalid("backend.link_your_account_again_to_continue")
 	}
 	if !connect && blocked && refs == 0 && t != nil {
 		c.client = nil

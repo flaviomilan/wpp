@@ -1,86 +1,104 @@
-# wpp · Seu arquivo local de conversas
+# wpp · Your local chat archive
 
-Capture conversas selecionadas do WhatsApp, leia seu histórico e transcreva áudios localmente. O **wpp** reúne uma **CLI que funciona sem navegador** e um **painel web intuitivo**, no mesmo executável Go. SQLite guarda mensagens e sessão; JSONL permite exportação completa e consumo incremental por outros sistemas.
+[![Quality](https://github.com/flaviomilan/wpp/actions/workflows/quality.yml/badge.svg?branch=main)](https://github.com/flaviomilan/wpp/actions/workflows/quality.yml)
+[![Go 1.26+](https://img.shields.io/badge/Go-1.26%2B-00ADD8?logo=go&logoColor=white)](go.mod)
+[![Platforms: Linux and macOS](https://img.shields.io/badge/platforms-Linux%20%7C%20macOS-555)](docs/operation.md#installation-and-first-use)
+[![Languages: English and Brazilian Portuguese](https://img.shields.io/badge/languages-en%20%7C%20pt--BR-2563eb)](#application-language)
+[![First-party license: MIT](https://img.shields.io/badge/first--party%20license-MIT-green)](LICENSE)
 
-![Painel web do wpp no tema claro, usando somente dados fictícios](docs/images/painel-light.png)
+Capture selected WhatsApp chats, read their history, and transcribe audio locally. **wpp** combines a **CLI that runs without a browser** and an **intuitive web workspace** in one Go executable. SQLite stores messages and the session; JSONL supports complete export and incremental consumption by other systems.
 
-## Começar pelo navegador
+![wpp web workspace in the light theme, using synthetic data only](docs/images/workspace-light.png)
 
-Requisitos de compilação: **Go 1.26+**, toolchain **1.26.9**, compilador C (`gcc` ou equivalente) e CGO habilitado. Suporte operacional a **Linux e macOS**; Windows não é suportado. Node.js/npm são usados apenas nas verificações de desenvolvimento.
+## Start in your browser
+
+Build requirements: **Go 1.26+**, toolchain **1.26.9**, a C compiler (`gcc` or equivalent), and CGO enabled. Operational support targets **Linux and macOS**; Windows is unsupported. Node.js/npm are used only for development checks.
 
 ```bash
 make build
-# Sem make: go build -buildvcs=false -trimpath -o wpp ./cmd/wpp
+# Without make: go build -buildvcs=false -trimpath -o wpp ./cmd/wpp
 ./wpp serve
-# Abra http://127.0.0.1:8080
+# Open http://127.0.0.1:8080
 ```
 
-Em **Ajustes → Conta**, conecte o WhatsApp pelo QR do celular. Volte a **Conversas**, use **Atualizar conversas** e acompanhe as desejadas. Em **Ajustes → Captura**, ative a captura contínua, ou use **Sincronizar agora** em uma conversa.
+In **Settings > Account**, connect WhatsApp using your phone's QR scanner. Return to **Chats**, choose **Refresh chats**, and track the conversations you want. Enable continuous capture under **Settings > Capture**, or use **Sync now** in a chat.
 
-Fechar a aba mantém o processo ativo; Ctrl+C encerra. A primeira abertura começa com captura pausada. As preferências ficam persistidas. O painel acompanha o tema do sistema e funciona em telas estreitas e com teclado.
+Closing the tab keeps the process active; Ctrl+C stops it. A new installation starts with capture paused and remembers preferences. The panel follows the system theme and supports narrow screens and keyboard navigation.
 
-## Começar pela CLI
+## Application language
+
+English is the default. Choose **English** or **Português (Brasil)** under **Settings > Advanced > Application language**, then **Save language**. The saved choice is shared by web and CLI in the same data directory and survives restarts. Browser and terminal locales do not select it automatically.
+
+```bash
+./wpp language pt-BR       # Remember Brazilian Portuguese
+./wpp language en          # Remember English
+./wpp --language en status # Override this invocation only
+```
+
+Application language is independent of audio recognition language and time zone. Messages, names, transcripts, and exported data retain their original content. Documentation is maintained in English. See [language behavior and overrides](docs/operation.md#application-language).
+
+## Start with the CLI
 
 ```bash
 ./wpp login
 ./wpp chats
-./wpp track 'ID_COMPLETO_EXIBIDO'
+./wpp track 'FULL_ID_SHOWN'
 ./wpp run
 ```
 
-Copie o ID completo de `chats`; nomes não são identificadores. `run` captura em primeiro plano sem abrir HTTP. Para execução em background, use o [guia de supervisão externa e exemplo systemd](docs/operacao.md#captura-em-background-no-linux).
+Copy the full ID from `chats`; names are not identifiers. `run` captures in the foreground without starting HTTP. For background execution, see [external supervision and the systemd example](docs/operation.md#background-capture-on-linux).
 
 ```bash
 ./wpp status
 ./wpp export
 ```
 
-Opções globais vêm **antes** do comando. Diretórios relativos partem do diretório de execução:
+Global options come **before** the command. Relative directories start at the working directory:
 
 ```bash
-./wpp --data-dir ./dados --export-dir ./exports --timezone America/Sao_Paulo run
+./wpp --data-dir ./data --export-dir ./exports --timezone America/Sao_Paulo run
 ```
 
-Use os mesmos diretórios ao reiniciar. Um único processo controla cada arquivo: com `run` ativo, `serve` abre em consulta e explica o conflito. Para assumir controle pelo navegador, pare o proprietário e reinicie `serve`. Não apague o lock.
+Reuse matching directories on restart. One process owns capture per archive: with `run` active, `serve` opens in consultation mode and explains the conflict. Stop the owner and restart `serve` to take control. Never delete the lock.
 
-## Áudio e dados
+## Audio and data
 
-A transcrição é opcional e usa Whisper/FFmpeg locais; nenhuma chamada a um modelo de linguagem é necessária. Instale o motor/modelo pelo [guia de transcrição](docs/transcricao.md), configure **Ajustes → Transcrição** e consulte a fila em **Áudios**. Os arquivos sonoros são temporários; o texto é persistido. A captura de texto funciona sem motor de áudio.
+Transcription is optional and uses local Whisper/FFmpeg; no language-model API call is required. Install an engine/model using [the transcription guide](docs/transcription.md), configure **Settings > Transcription**, and inspect the queue in **Audio**. Sound files are temporary; text persists. Text capture works without an audio engine. Audio recognition defaults to Portuguese independently of the English interface.
 
-SQLite é a fonte principal. Exports completos ficam em `exports/chat-<hash>.jsonl`; lotes incrementais têm manifesto e cursor independente. Os diretórios de dados e exports contêm conteúdo privado e não devem ser enviados ao GitHub.
+SQLite is the primary source. Complete exports live in `exports/chat-<hash>.jsonl`; incremental batches have a manifest and independent cursor. Data and export directories contain private content and must never be sent to GitHub.
 
 ```bash
 ./wpp events next '123456789@g.us'
-# Persista os eventos com unicidade por event_id antes de confirmar.
+# Persist events with uniqueness on event_id before acknowledgement.
 ./wpp events ack '123456789@g.us' E000001
 ./wpp events status '123456789@g.us'
 ```
 
-Os identificadores acima são fictícios. Consulte o [contrato JSONL](docs/eventos-jsonl.md) para schemas, reações, edições e transcrições. A exportação completa não confirma lotes. O alias `batch` compartilha o protocolo de `events`.
+Identifiers above are fictitious. See the [JSONL contract](docs/jsonl-events.md) for schemas, reactions, edits, and transcripts. Complete export does not acknowledge batches. `batch` aliases the `events` protocol.
 
-## Limites importantes
+## Important limits
 
-A integração com WhatsApp é **não oficial**, baseada em [whatsmeow](https://github.com/tulir/whatsmeow), e pode quebrar ou resultar em restrição da conta. O wpp não envia mensagens a contatos nem confirma leitura; faz as solicitações de protocolo necessárias à sincronização.
+WhatsApp integration is **unofficial**, using [whatsmeow](https://github.com/tulir/whatsmeow), and can break or lead to account restrictions. wpp does not send messages to contacts or mark messages read; it makes protocol requests needed for synchronization.
 
-**Histórico integral e ausência de lacunas nunca são certificados.** O programa preserva o que recebe e tenta recuperar o que o celular disponibiliza. Resultado operacional bem-sucedido não comprova cobertura. Mensagens apagadas, expiradas ou indisponíveis podem não ser recuperáveis.
+**Complete history and absence of gaps are never certified.** The application preserves what it receives and attempts to retrieve what the phone makes available. Operational success does not establish coverage. Deleted, expired, or unavailable messages may be unrecoverable.
 
-O painel aceita somente loopback; não é um serviço remoto autenticado. Um diretório de dados é vinculado a uma única conta. Não há múltiplas contas no mesmo diretório, importação manual de exports, canais/status ou download de outras mídias nesta versão.
+The panel accepts loopback connections only and does not provide authenticated remote access. One data directory belongs to one account. This version does not provide multiple accounts per directory, manual export imports, channels/status, or downloads of media other than audio.
 
-## Documentação
+## Documentation
 
-- [Interface web e ajustes](docs/interface.md)
-- [Instalação, comandos, backup e operação em background](docs/operacao.md)
-- [Funcionamento e garantias da captura](docs/funcionamento.md)
-- [Transcrição local](docs/transcricao.md)
-- [Consumo incremental por IA e sistemas externos](docs/consumo-ia.md)
-- [Contrato dos eventos JSONL](docs/eventos-jsonl.md)
-- [Arquitetura](docs/arquitetura.md) e [qualidade](docs/qualidade.md)
-- [Contribuição](CONTRIBUTING.md), [segurança](SECURITY.md) e [convivência](CODE_OF_CONDUCT.md)
-- [Preparação do lançamento público](docs/lancamento.md)
+- [Web workspace and settings](docs/interface.md)
+- [Installation, commands, backup, and background operation](docs/operation.md)
+- [Capture behavior and guarantees](docs/how-it-works.md)
+- [Local transcription](docs/transcription.md)
+- [Incremental consumption by AI and external systems](docs/ai-consumption.md)
+- [JSONL event contract](docs/jsonl-events.md)
+- [Architecture](docs/architecture.md) and [quality](docs/quality.md)
+- [Contributing](CONTRIBUTING.md), [security](SECURITY.md), and [code of conduct](CODE_OF_CONDUCT.md)
+- [Public launch preparation](docs/release.md)
 
-## Desenvolvimento
+## Development
 
-Go/C e Node.js 24+ são necessários para os checks. O build de distribuição usa apenas Go/C e inclui os assets web.
+Go/C and Node.js 24+ are needed for checks. Distribution builds use Go/C only and embed the web assets.
 
 ```bash
 make tools
@@ -90,16 +108,16 @@ npx playwright install chromium
 npm run test:browser
 ```
 
-Todos os testes padrão usam dados temporários/fictícios e dispensam sessão WhatsApp. Pareamento real precisa da ação do titular e não é requisito de contribuição. As imagens deste README são demonstrações fictícias geradas pelos testes do navegador.
+Standard tests use temporary/synthetic data without a WhatsApp session. Real pairing needs the account holder's action and is not required to contribute. README images are synthetic browser-test demonstrations.
 
-`make tools` também instala os hooks locais de publicação. Use seu endereço GitHub `noreply` nos commits e prepare apenas arquivos públicos revisados no manifesto. Commits, pushes e pacotes passam por validação de conteúdo e scanner de segredos; novos arquivos e imagens exigem revisão explícita. Veja [Contribuição](CONTRIBUTING.md) e os limites dessas proteções em [Segurança](SECURITY.md).
+`make tools` also installs local publication hooks. Use your GitHub `noreply` address in commits and stage only reviewed public files from the manifest. Commits, pushes, and packages undergo content validation and secret scanning; new files and images require explicit review. See [Contributing](CONTRIBUTING.md) and the protection limits in [Security](SECURITY.md).
 
-## Autoria e licença
+## Authorship and license
 
-Criado e mantido por [Flávio Milan (@flaviomilan)](https://github.com/flaviomilan), com repositório de destino [flaviomilan/wpp](https://github.com/flaviomilan/wpp).
+Created and maintained by [Flávio Milan (@flaviomilan)](https://github.com/flaviomilan), targeting [flaviomilan/wpp](https://github.com/flaviomilan/wpp).
 
-O código próprio é distribuído sob a [licença MIT](LICENSE): permite uso, alteração e redistribuição, inclusive comercial, preservando o aviso de copyright e o texto da licença nas cópias ou partes substanciais. A atribuição não exige um crédito na interface de cada aplicação derivada.
+First-party code uses the [MIT license](LICENSE), allowing use, modification, and redistribution, including commercial use, while retaining the copyright notice and license text in copies or substantial portions. Attribution does not require a credit in each derivative application's interface.
 
-As dependências mantêm suas licenças. Em particular, o executável que incorpora libsignal precisa observar a GPL v3; a licença MIT do código próprio não transforma esse conjunto em um binário exclusivamente MIT. Veja [avisos de terceiros](THIRD_PARTY_NOTICES.md) e o [checklist de lançamento](docs/lancamento.md).
+Dependencies retain their licenses. In particular, an executable incorporating libsignal must meet GPL v3 requirements; the first-party MIT license does not make that combined binary MIT-only. See [third-party notices](THIRD_PARTY_NOTICES.md) and the [release checklist](docs/release.md).
 
-Problemas de uso e propostas vão para [Issues](https://github.com/flaviomilan/wpp/issues). Relatos de segurança seguem [SECURITY.md](SECURITY.md); não exigem divulgar contato pessoal. Esta preparação não cria nem publica automaticamente o repositório ou releases.
+Use [Issues](https://github.com/flaviomilan/wpp/issues) for usage problems and proposals. Security reports follow [SECURITY.md](SECURITY.md) without publishing personal contact details. Preparation does not automatically create/publish the repository or releases.

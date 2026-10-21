@@ -8,9 +8,10 @@ import (
 	"strings"
 	"time"
 	"unicode/utf8"
+	"wpp/internal/localization"
 )
 
-var ErrAudioOffline = errors.New("WhatsApp desconectado")
+var ErrAudioOffline = localization.New("archive.whatsapp_disconnected")
 
 // Metadata never leaves the queue through the public browser API.
 type AudioJob struct {
@@ -79,7 +80,7 @@ func (s *Store) AudioJobs(offset, limit int) ([]AudioJob, error) {
 }
 func (s *Store) AudioJobsFiltered(offset, limit int, chat, state string) ([]AudioJob, error) {
 	if offset < 0 || limit < 1 || limit > 101 {
-		return nil, errors.New("paginação inválida")
+		return nil, localization.New("archive.invalid_pagination")
 	}
 	jobs := []AudioJob{}
 	err := s.transaction(func(tx *sql.Tx) error {
@@ -186,7 +187,7 @@ func (s *Store) ReleaseAudio(j AudioJob, detail string, cancelled bool) error {
 		}
 		// Caller supplies categorical errors, never engine output or message content.
 		if len(detail) > 256 {
-			return errors.New("erro de fila excede limite")
+			return localization.New("archive.queue_error_limit")
 		}
 		_, e = tx.Exec("UPDATE audio_jobs SET state=?,attempts=?,error=?,token='',lease_until=0,next_attempt=?,updated=? WHERE source_id=? AND state='processing' AND token=?", state, attempts, detail, nextAttempt, time.Now().Unix(), source, j.Token)
 		return e
@@ -207,7 +208,7 @@ func (s *Store) RetryAudio(source string) error {
 			return e
 		}
 		if n == 0 {
-			return invalidInput("somente áudios com erro e metadados disponíveis podem ser reenfileirados")
+			return invalidInput("archive.only_audio_with_errors_and_available_metadata_can_be_requeued")
 		}
 		return nil
 	})
@@ -241,7 +242,7 @@ func (s *Store) CompleteAudio(j AudioJob, t Transcript) error {
 			return e
 		}
 		if token != j.Token || state != "processing" {
-			return errors.New("reserva de áudio não está ativa")
+			return localization.New("archive.audio_reservation_is_not_active")
 		}
 		var raw []byte
 		if e = tx.QueryRow("SELECT data FROM messages WHERE source_id=?", source).Scan(&raw); e != nil {
@@ -252,7 +253,7 @@ func (s *Store) CompleteAudio(j AudioJob, t Transcript) error {
 			return e
 		}
 		if m.Deleted || m.Kind != "áudio" {
-			return errors.New("áudio excluído ou substituído")
+			return localization.New("archive.audio_deleted_or_replaced")
 		}
 		m.Transcript = &t
 		encoded, e := json.Marshal(m)
@@ -275,11 +276,11 @@ func (s *Store) CompleteAudio(j AudioJob, t Transcript) error {
 
 func validateTranscript(t Transcript) error {
 	if strings.TrimSpace(t.Text) == "" || !utf8.ValidString(t.Text) || len(t.Text) > 4*1024*1024 {
-		return errors.New("transcrição vazia ou inválida")
+		return localization.New("archive.empty_or_invalid_transcript")
 	}
 	for _, segment := range t.Segments {
 		if segment.StartMS < 0 || segment.EndMS < segment.StartMS || !utf8.ValidString(segment.Text) {
-			return errors.New("segmento inválido")
+			return localization.New("archive.invalid_segment")
 		}
 	}
 	return nil
@@ -304,7 +305,7 @@ func (s *Store) CorrectTranscript(source string, t Transcript) error {
 			return err
 		}
 		if m.Deleted || m.Kind != "áudio" || m.Transcript == nil {
-			return invalidInput("correção exige áudio com transcrição existente")
+			return invalidInput("archive.correction_requires_audio_with_an_existing_transcript")
 		}
 		old := *m.Transcript
 		old.ObservedAt = nil

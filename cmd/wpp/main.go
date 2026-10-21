@@ -21,6 +21,7 @@ import (
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/types"
 	"wpp/internal/archive"
+	"wpp/internal/localization"
 	"wpp/internal/service"
 	"wpp/internal/transcription"
 	"wpp/internal/webui"
@@ -32,7 +33,12 @@ func main() {
 	defer cancel()
 	if err := execute(ctx, os.Args[1:], os.Stdout, os.Stderr); err != nil && !onlyCancellation(err) {
 		// The exit status still reports failure if stderr itself cannot be written.
-		_, _ = fmt.Fprintln(os.Stderr, "Erro:", err)
+		prefix := "Error:"
+		var translated *localization.LocalizedError
+		if errors.As(err, &translated) && translated.Language == localization.Portuguese {
+			prefix = "Erro:"
+		}
+		_, _ = fmt.Fprintln(os.Stderr, prefix, err)
 		os.Exit(1)
 	}
 }
@@ -55,9 +61,10 @@ type executeOptions struct {
 // checkedOutput retains writer failures, including callbacks whose signatures
 // cannot return errors. Command completion joins them with execution failures.
 type checkedOutput struct {
-	writer io.Writer
-	mu     sync.Mutex
-	err    error
+	writer   io.Writer
+	language string
+	mu       sync.Mutex
+	err      error
 }
 
 func (o *checkedOutput) Write(raw []byte) (int, error) {
@@ -90,24 +97,31 @@ func execute(ctx context.Context, args []string, out, stderr io.Writer) error {
 }
 
 func executeWithOptions(ctx context.Context, args []string, out, stderr io.Writer, options executeOptions) (resultErr error) {
-	output, diagnostic := &checkedOutput{writer: out}, &checkedOutput{writer: stderr}
-	defer func() { resultErr = errors.Join(resultErr, output.failure(), diagnostic.failure()) }()
+	language, languageErr := invocationLanguage(args)
+	if languageErr != nil {
+		return languageErr
+	}
+	output, diagnostic := &checkedOutput{writer: out, language: language}, &checkedOutput{writer: stderr, language: language}
+	defer func() {
+		resultErr = localization.InLanguage(errors.Join(resultErr, output.failure(), diagnostic.failure()), language)
+	}()
 	flags := flag.NewFlagSet("wpp", flag.ContinueOnError)
 	flags.SetOutput(diagnostic)
-	data := flags.String("data-dir", "./data", "diretório de sessão e banco")
-	exports := flags.String("export-dir", "./exports", "diretório dos arquivos JSONL")
-	timezone := flags.String("timezone", "America/Sao_Paulo", "fuso horário de exibição no painel e status")
-	listen := flags.String("listen", "127.0.0.1:8080", "endereço local da interface web")
+	languageOverride := flags.String("language", "", localization.Text(language, "language.override_help", nil))
+	data := flags.String("data-dir", "./data", localization.Text(language, "cli.session_and_database_directory", nil))
+	exports := flags.String("export-dir", "./exports", localization.Text(language, "cli.jsonl_export_directory", nil))
+	timezone := flags.String("timezone", "America/Sao_Paulo", localization.Text(language, "cli.display_time_zone_for_the_panel_and_status", nil))
+	listen := flags.String("listen", "127.0.0.1:8082", localization.Text(language, "cli.local_web_interface_address", nil))
 	audioConfig := transcription.Config{}
-	flags.StringVar(&audioConfig.Model, "whisper-model", "", "modelo ggml multilíngue; habilita transcrição durante run")
-	flags.StringVar(&audioConfig.Whisper, "whisper-bin", "whisper-cli", "executável whisper.cpp")
-	flags.StringVar(&audioConfig.FFmpeg, "ffmpeg-bin", "ffmpeg", "executável ffmpeg")
-	flags.StringVar(&audioConfig.Language, "audio-language", "pt", "idioma dos áudios; auto para detectar")
-	flags.StringVar(&audioConfig.Prompt, "audio-vocabulary", "", "nomes e termos específicos para orientar reconhecimento")
-	flags.IntVar(&audioConfig.Threads, "audio-threads", 0, "threads de transcrição; 0 usa até 8 CPUs")
-	flags.DurationVar(&audioConfig.Timeout, "audio-timeout", 30*time.Minute, "limite por áudio, sem truncar conteúdo")
+	flags.StringVar(&audioConfig.Model, "whisper-model", "", localization.Text(language, "cli.multilingual_ggml_model_enables_transcription_during_run", nil))
+	flags.StringVar(&audioConfig.Whisper, "whisper-bin", "whisper-cli", localization.Text(language, "cli.whisper_cpp_executable", nil))
+	flags.StringVar(&audioConfig.FFmpeg, "ffmpeg-bin", "ffmpeg", localization.Text(language, "cli.ffmpeg_executable", nil))
+	flags.StringVar(&audioConfig.Language, "audio-language", "pt", localization.Text(language, "cli.audio_recognition_language_auto_to_detect", nil))
+	flags.StringVar(&audioConfig.Prompt, "audio-vocabulary", "", localization.Text(language, "cli.names_and_specific_terms_to_guide_recognition", nil))
+	flags.IntVar(&audioConfig.Threads, "audio-threads", 0, localization.Text(language, "cli.transcription_threads_0_uses_up_to_8_cpus", nil))
+	flags.DurationVar(&audioConfig.Timeout, "audio-timeout", 30*time.Minute, localization.Text(language, "cli.time_limit_per_audio_without_truncating_content", nil))
 	flags.Usage = func() {
-		diagnostic.println("Uso: wpp [opções globais] <comando>\nComandos: login, chats [--groups], track <id>, untrack <id>, run, status, export, serve, audio status|retry <fonte>, audio correct <fonte> <transcricao.json>\nEventos JSONL: events next|status <grupo>, events ack <grupo> <lote>\nJSONL offline: events next|status <grupo>, events ack <grupo> <lote>, evidence <grupo> <fonte>; batch é alias de events")
+		diagnostic.println(localization.Text(language, "cli.usage_wpp_global_options_command_commands_login_chats_groups", nil))
 		flags.PrintDefaults()
 	}
 	if err := flags.Parse(args); err != nil {
@@ -119,10 +133,17 @@ func executeWithOptions(ctx context.Context, args []string, out, stderr io.Write
 	rest := flags.Args()
 	if len(rest) == 0 {
 		flags.Usage()
-		return errors.New("informe um comando")
+		return localization.New("cli.specify_a_command")
 	}
 	command := rest[0]
 	switch command {
+	case "language":
+		if len(rest) > 2 {
+			return localization.New("language.usage")
+		}
+		if len(rest) == 2 && !localization.Valid(rest[1]) {
+			return errors.New(localization.Text(language, "language.invalid", nil))
+		}
 	case "audio":
 		if len(rest) == 4 && rest[1] == "correct" {
 			break
@@ -130,45 +151,45 @@ func executeWithOptions(ctx context.Context, args []string, out, stderr io.Write
 		if (len(rest) == 2 && rest[1] == "status") || (len(rest) == 3 && rest[1] == "retry") {
 			break
 		}
-		return errors.New("uso: wpp audio status, wpp audio retry <fonte> ou wpp audio correct <fonte> <transcricao.json>")
+		return localization.New("cli.usage_wpp_audio_status_wpp_audio_retry_source_or")
 	case "events", "batch":
 		if len(rest) < 3 {
-			return fmt.Errorf("uso: wpp %s next|status <grupo> ou %s ack <grupo> <lote>", command, command)
+			return localization.Errorf("cli.usage_wpp_s_next_status_group_or_s_ack", command, command)
 		}
 		if !strings.HasSuffix(rest[2], "@g.us") {
-			return errors.New("use um identificador de grupo @g.us")
+			return localization.New("cli.use_a_group_identifier_ending_in_g_us")
 		}
 		if (rest[1] == "ack" && len(rest) != 4) || ((rest[1] == "next" || rest[1] == "status") && len(rest) != 3) || (rest[1] != "ack" && rest[1] != "next" && rest[1] != "status") {
-			return fmt.Errorf("subcomando ou argumentos de %s inválidos", command)
+			return localization.Errorf("cli.invalid_subcommand_or_arguments_for_s", command)
 		}
 
 	case "evidence":
 		if len(rest) != 3 {
-			return errors.New("uso: wpp evidence <grupo> <fonte>")
+			return localization.New("cli.usage_wpp_evidence_group_source")
 		}
 
 	case "track", "untrack":
 		if len(rest) != 2 {
-			return errors.New("uso: wpp " + command + " <id>")
+			return errors.New(localization.Text(language, "cli.usage_wpp", nil) + command + " <id>")
 		}
 		j, err := types.ParseJID(rest[1])
 		if err != nil || !whatsapp.Supported(j) || j.User == "" || j.Device != 0 {
-			return errors.New("use o ID completo de um grupo ou contato exibido por wpp chats")
+			return localization.New("cli.use_the_full_group_or_contact_id_shown_by")
 		}
 	case "chats":
 		if len(rest) > 2 || (len(rest) == 2 && rest[1] != "--groups") {
-			return errors.New("uso: wpp chats [--groups]")
+			return localization.New("cli.usage_wpp_chats_groups")
 		}
 	case "login", "run", "status", "export", "serve":
 		if len(rest) != 1 {
-			return errors.New("argumentos inesperados")
+			return localization.New("cli.unexpected_arguments")
 		}
 	default:
-		return fmt.Errorf("comando desconhecido: %s", command)
+		return localization.Errorf("cli.unknown_command_s", command)
 	}
 	zone, err := time.LoadLocation(*timezone)
 	if err != nil {
-		return errors.New("fuso horário inválido")
+		return localization.New("cli.invalid_time_zone")
 	}
 	// Canonicalize the data path before acquiring the lock (including symlinks).
 	if err = os.MkdirAll(*data, 0700); err != nil {
@@ -192,7 +213,7 @@ func executeWithOptions(ctx context.Context, args []string, out, stderr io.Write
 			return e
 		}
 		defer unlock()
-	} else if command != "status" && command != "serve" && command != "run" && command != "audio" {
+	} else if command != "status" && command != "serve" && command != "run" && command != "audio" && command != "language" {
 		unlock, e := archive.Lock(*data)
 		if e != nil {
 			return e
@@ -204,6 +225,20 @@ func executeWithOptions(ctx context.Context, args []string, out, stderr io.Write
 		return err
 	}
 	defer func() { resultErr = errors.Join(resultErr, db.Close()) }()
+	if command == "language" {
+		if len(rest) == 2 {
+			if err = db.SaveApplicationLanguage(rest[1]); err != nil {
+				return err
+			}
+		}
+		saved, e := db.ApplicationLanguage()
+		if e != nil {
+			return e
+		}
+		output.println(saved)
+		return nil
+	}
+
 	if command == "audio" {
 		if rest[1] == "correct" {
 			file, e := os.Open(rest[3])
@@ -228,7 +263,7 @@ func executeWithOptions(ctx context.Context, args []string, out, stderr io.Write
 				return errors.Join(statErr, file.Close())
 			}
 			if info.Size() > 16*1024*1024 {
-				return errors.Join(errors.New("transcrição JSON excede 16 MiB"), file.Close())
+				return errors.Join(localization.New("cli.transcript_json_exceeds_16_mib"), file.Close())
 			}
 			decoder := json.NewDecoder(io.LimitReader(file, 16*1024*1024+1))
 			decoder.DisallowUnknownFields()
@@ -236,7 +271,7 @@ func executeWithOptions(ctx context.Context, args []string, out, stderr io.Write
 			var extra any
 			if e == nil {
 				if next := decoder.Decode(&extra); !errors.Is(next, io.EOF) {
-					e = errors.New("informe um único objeto JSON de transcrição")
+					e = localization.New("cli.provide_a_single_transcript_json_object")
 				}
 			}
 			e = errors.Join(e, file.Close())
@@ -260,11 +295,19 @@ func executeWithOptions(ctx context.Context, args []string, out, stderr io.Write
 		if e != nil {
 			return e
 		}
-		output.println("Fila de transcrição:", summary)
-		for _, job := range jobs {
-			output.printf("%s · %s · %s · tentativas %d · %s\n", job.Source, job.Chat, job.State, job.Attempts, job.Error)
+		summaryLabels := map[string]int{}
+		for state, count := range summary {
+			label := state
+			if localization.Known("state." + state) {
+				label = localization.Text(language, "state."+state, nil)
+			}
+			summaryLabels[label] = count
 		}
-		output.println("Até 100 registros recentes. Consulte todas as páginas na interface.")
+		output.println(localization.Text(language, "cli.transcription_queue", nil), summaryLabels)
+		for _, job := range jobs {
+			output.printf(localization.Text(language, "cli.s_s_s_attempts_d_s", nil), job.Source, job.Chat, localization.Text(language, "state."+job.State, nil), job.Attempts, displayDiagnostic(language, job.Error))
+		}
+		output.println(localization.Text(language, "cli.up_to_100_recent_records_browse_all_pages_in", nil))
 		return nil
 	}
 	if command == "serve" || command == "run" {
@@ -280,9 +323,9 @@ func executeWithOptions(ctx context.Context, args []string, out, stderr io.Write
 		defer func() { resultErr = errors.Join(resultErr, controller.Close()) }()
 		if command == "serve" {
 			return webui.ServeControlled(ctx, db, *listen, func(url string) {
-				output.println("Painel de controle:", url)
-				output.println("Fechar a aba mantém o processamento. Ctrl+C encerra o painel e a captura.")
-			}, zone, controller)
+				output.println(localization.Text(language, "cli.control_panel", nil), url)
+				output.println(localization.Text(language, "cli.closing_the_tab_keeps_processing_active_ctrl_c_stops", nil))
+			}, zone, controller, *languageOverride)
 		}
 		state, e := controller.Snapshot()
 		if e != nil {
@@ -292,7 +335,7 @@ func executeWithOptions(ctx context.Context, args []string, out, stderr io.Write
 			return service.ErrReadOnly
 		}
 		if !state.Linked {
-			return errors.New("execute wpp login primeiro")
+			return localization.New("cli.run_wpp_login_first")
 		}
 		chats, e := db.Chats()
 		if e != nil {
@@ -303,12 +346,12 @@ func executeWithOptions(ctx context.Context, args []string, out, stderr io.Write
 			tracked = tracked || chat.Tracked
 		}
 		if !tracked {
-			return errors.New("configure ao menos uma conversa com wpp track <id>")
+			return localization.New("cli.configure_at_least_one_chat_with_wpp_track_id")
 		}
 		if e = controller.SetCapture(true); e != nil {
 			return e
 		}
-		output.println("Captura solicitada. Ctrl+C encerra e conclui as exportações pendentes.")
+		output.println(localization.Text(language, "cli.capture_requested_ctrl_c_stops_capture_and_completes_pending", nil))
 		ticker := time.NewTicker(time.Second)
 		defer ticker.Stop()
 		for {
@@ -336,7 +379,7 @@ func executeWithOptions(ctx context.Context, args []string, out, stderr io.Write
 				return e
 			}
 			if path == "" {
-				output.println("Nenhum evento novo.")
+				output.println(localization.Text(language, "cli.no_new_events", nil))
 			} else {
 				output.println(path)
 			}
@@ -345,7 +388,7 @@ func executeWithOptions(ctx context.Context, args []string, out, stderr io.Write
 			if e := batches.Ack(rest[2], rest[3]); e != nil {
 				return e
 			}
-			output.println("Lote confirmado:", rest[3])
+			output.println(localization.Text(language, "cli.batch_acknowledged", nil), rest[3])
 			return nil
 		case "status":
 			state, e := db.EventStatus(rest[2])
@@ -371,15 +414,15 @@ func executeWithOptions(ctx context.Context, args []string, out, stderr io.Write
 		if err = db.Track(rest[1], command == "track"); err != nil {
 			return err
 		}
-		output.println("Acompanhamento atualizado:", rest[1])
+		output.println(localization.Text(language, "cli.tracking_updated", nil), rest[1])
 		return exporter.ExportContext(ctx, false)
 	case "status":
-		return printStatus(db, out, zone)
+		return printStatus(db, output, zone)
 	case "export":
 		if err = exporter.ExportContext(ctx, true); err != nil {
 			return err
 		}
-		output.println("Arquivos JSONL reconstruídos em", *exports)
+		output.println(localization.Text(language, "cli.jsonl_files_rebuilt_in", nil), *exports)
 		return nil
 	}
 
@@ -387,7 +430,7 @@ func executeWithOptions(ctx context.Context, args []string, out, stderr io.Write
 	if open == nil {
 		open = openCLIConnection
 	}
-	client, err := open(ctx, *data, db, func(message string) { diagnostic.println(message) })
+	client, err := open(ctx, *data, db, func(message string) { diagnostic.println(displayDiagnostic(language, message)) })
 	if err != nil {
 		return err
 	}
@@ -397,7 +440,7 @@ func executeWithOptions(ctx context.Context, args []string, out, stderr io.Write
 			if err = db.BindAccount(client.account().ToNonAD().String()); err != nil {
 				return err
 			}
-			output.println("Sessão já vinculada. Execute wpp chats ou wpp run.")
+			output.println(localization.Text(language, "cli.session_already_linked_run_wpp_chats_or_wpp_run", nil))
 			return nil
 		}
 		qr, err := client.qr(ctx)
@@ -405,9 +448,9 @@ func executeWithOptions(ctx context.Context, args []string, out, stderr io.Write
 			return err
 		}
 		if err = client.connect(ctx); err != nil {
-			return errors.New("não foi possível conectar ao WhatsApp")
+			return localization.New("cli.could_not_connect_to_whatsapp")
 		}
-		output.println("No celular: WhatsApp → Dispositivos conectados → Conectar dispositivo.")
+		output.println(localization.Text(language, "cli.on_your_phone_whatsapp_linked_devices_link_a_device", nil))
 		for {
 			select {
 			case <-ctx.Done():
@@ -416,7 +459,7 @@ func executeWithOptions(ctx context.Context, args []string, out, stderr io.Write
 				return err
 			case item, ok := <-qr:
 				if !ok {
-					return errors.New("pareamento encerrado; tente wpp login novamente")
+					return localization.New("cli.pairing_ended_try_wpp_login_again")
 				}
 				if item.Event == "code" {
 					qrterminal.GenerateHalfBlock(item.Code, qrterminal.L, output)
@@ -425,7 +468,7 @@ func executeWithOptions(ctx context.Context, args []string, out, stderr io.Write
 					if err = waitOnline(ctx, client.events); err != nil {
 						return err
 					}
-					output.println("Conta vinculada. Aguardando a sincronização inicial por 10 segundos.")
+					output.println(localization.Text(language, "cli.account_linked_waiting_10_seconds_for_initial_synchronization", nil))
 					timer := time.NewTimer(10 * time.Second)
 					defer timer.Stop()
 					select {
@@ -436,18 +479,18 @@ func executeWithOptions(ctx context.Context, args []string, out, stderr io.Write
 					case <-timer.C:
 					}
 					if err = client.discover(ctx); err != nil {
-						diagnostic.println("Descoberta incompleta; execute wpp chats novamente.")
+						diagnostic.println(localization.Text(language, "cli.discovery_incomplete_run_wpp_chats_again", nil))
 					}
 					return nil
 				}
 				if item.Event == "timeout" || item.Event == "error" {
-					return errors.New("pareamento não concluído; tente novamente")
+					return localization.New("cli.pairing_incomplete_try_again")
 				}
 			}
 		}
 	}
 	if client.account() == nil {
-		return errors.New("execute wpp login primeiro")
+		return localization.New("cli.run_wpp_login_first")
 	}
 	if err = db.BindAccount(client.account().ToNonAD().String()); err != nil {
 		return err
@@ -455,7 +498,7 @@ func executeWithOptions(ctx context.Context, args []string, out, stderr io.Write
 
 	client.reconnect()
 	if err = client.connect(ctx); err != nil {
-		return errors.New("não foi possível conectar ao WhatsApp")
+		return localization.New("cli.could_not_connect_to_whatsapp")
 	}
 	if command == "chats" {
 		if err = waitOnline(ctx, client.events); err != nil {
@@ -474,9 +517,9 @@ func executeWithOptions(ctx context.Context, args []string, out, stderr io.Write
 		if err = client.discover(ctx); err != nil {
 			return err
 		}
-		return printChats(db, out, len(rest) == 2)
+		return printChats(db, output, len(rest) == 2)
 	}
-	return errors.New("comando inválido")
+	return localization.New("cli.invalid_command")
 }
 
 func waitOnline(ctx context.Context, c *whatsapp.Client) error {
@@ -490,32 +533,52 @@ func waitOnline(ctx context.Context, c *whatsapp.Client) error {
 	case <-c.Online:
 		return nil
 	case <-timer.C:
-		return errors.New("tempo limite de conexão excedido")
+		return localization.New("cli.connection_timed_out")
 	}
 }
 
 func printChats(db *archive.Store, out io.Writer, groupsOnly ...bool) error {
+	language, languageErr := db.ApplicationLanguage()
+	if languageErr != nil {
+		return languageErr
+	}
+	if localized, ok := out.(*checkedOutput); ok && localization.Valid(localized.language) {
+		language = localized.language
+	}
+	return printChatsLanguage(db, out, language, groupsOnly...)
+}
+func printChatsLanguage(db *archive.Store, out io.Writer, language string, groupsOnly ...bool) error {
 	chats, err := db.Chats()
 	if err != nil {
 		return err
 	}
 	table := tabwriter.NewWriter(out, 0, 4, 2, ' ', 0)
 	output := &checkedOutput{writer: table}
-	output.println("ID\tTIPO\tNOME\tACOMPANHANDO")
+	output.println(localization.Text(language, "cli.id_type_name_tracked", nil))
 	for _, c := range chats {
 		group := strings.HasSuffix(c.ID, "@g.us")
 		if len(groupsOnly) > 0 && groupsOnly[0] && !group {
 			continue
 		}
-		kind := "contato"
+		kind := localization.Text(language, "cli.contact", nil)
 		if group {
-			kind = "grupo"
+			kind = localization.Text(language, "cli.group", nil)
 		}
-		output.printf("%s\t%s\t%s\t%t\n", c.ID, kind, chatLabel(c), c.Tracked)
+		output.printf("%s\t%s\t%s\t%t\n", c.ID, kind, chatLabelLanguage(c, language), c.Tracked)
 	}
 	return errors.Join(output.failure(), table.Flush())
 }
 func printStatus(db *archive.Store, out io.Writer, zone *time.Location) error {
+	language, languageErr := db.ApplicationLanguage()
+	if languageErr != nil {
+		return languageErr
+	}
+	if localized, ok := out.(*checkedOutput); ok && localization.Valid(localized.language) {
+		language = localized.language
+	}
+	return printStatusLanguage(db, out, zone, language)
+}
+func printStatusLanguage(db *archive.Store, out io.Writer, zone *time.Location, language string) error {
 	output := &checkedOutput{writer: out}
 	chats, err := db.Chats()
 	if err != nil {
@@ -529,22 +592,22 @@ func printStatus(db *archive.Store, out io.Writer, zone *time.Location) error {
 		if err != nil {
 			return err
 		}
-		output.printf("%s (%s)\n  Mensagens: %d | Primeira: %s | Última: %s\n  Arquivo: %s\n", chatLabel(c), c.ID, c.Count, formatTime(c.First, zone), formatTime(c.Last, zone), c.File)
-		output.println("  Histórico integral e ausência de lacunas: não confirmados.")
+		output.printf(localization.Text(language, "cli.s_s_messages_d_first_s_last_s_file", nil), chatLabelLanguage(c, language), c.ID, c.Count, formatTime(c.First, zone), formatTime(c.Last, zone), c.File)
+		output.println(localization.Text(language, "cli.complete_history_and_absence_of_gaps_unconfirmed", nil))
 		for _, a := range attempts {
-			output.printf("  %s | %s | %s\n", formatTime(a.Started, zone), a.State, a.Detail)
+			output.printf("  %s | %s | %s\n", formatTime(a.Started, zone), a.State, attemptDiagnostic(language, a))
 		}
 	}
 	return output.failure()
 }
-func chatLabel(c archive.Chat) string {
+func chatLabelLanguage(c archive.Chat, language string) string {
 	if name := strings.TrimSpace(safe(c.Name)); name != "" {
 		return name
 	}
 	if strings.HasSuffix(c.ID, "@g.us") {
-		return "Grupo (nome indisponível)"
+		return localization.Text(language, "cli.group_name_unavailable", nil)
 	}
-	return "Contato (nome indisponível)"
+	return localization.Text(language, "cli.contact_name_unavailable", nil)
 }
 func formatTime(t time.Time, z *time.Location) string {
 	if t.IsZero() {
@@ -576,7 +639,9 @@ func onlyCancellation(err error) bool {
 		return true
 	}
 	if wrapped, ok := err.(interface{ Unwrap() error }); ok {
-		return onlyCancellation(wrapped.Unwrap())
+		if child := wrapped.Unwrap(); child != nil {
+			return onlyCancellation(child)
+		}
 	}
 	return errors.Is(err, context.Canceled)
 }
@@ -586,4 +651,18 @@ func eventLockGroup(command, group string) string {
 		return "events:" + group
 	}
 	return group
+}
+
+func displayDiagnostic(language, value string) string {
+	if localization.Known(value) {
+		return localization.Text(language, value, nil)
+	}
+	return value
+}
+
+func attemptDiagnostic(language string, attempt archive.Attempt) string {
+	if attempt.DetailCode != "" {
+		return localization.Text(language, attempt.DetailCode, nil)
+	}
+	return attempt.Detail
 }

@@ -1,11 +1,11 @@
-## Problema e resultado
+## Problem and outcome
 
-Descreva o problema e como fica o comportamento para quem usa o projeto.
+Describe the problem and resulting behavior for users.
 
-## Validação
+## Validation
 
-Informe comandos executados, resultados e limitações. Use somente dados fictícios.
+List commands actually run, results, and limitations. Use synthetic data only.
 
-- [ ] Testes pertinentes executados e documentação coerente
-- [ ] Contratos CLI/web/JSONL e proteção de dados revisados
-- [ ] Sem bancos, sessões, QR, tokens ou exports reais
+- [ ] Relevant tests run and documentation consistent
+- [ ] CLI/web/JSONL contracts and data protection reviewed
+- [ ] No real databases, sessions, QR codes, tokens, or exports

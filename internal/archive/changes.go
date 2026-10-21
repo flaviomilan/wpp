@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"wpp/internal/localization"
 )
 
 func newSourceID() string {
@@ -23,7 +24,7 @@ func (s *Store) migrateAnalysis() error {
 			return err
 		}
 		if version > 7 {
-			return errors.New("versão de banco mais recente que este programa")
+			return localization.New("archive.database_version_is_newer_than_this_program")
 		}
 		if version >= 5 {
 			return nil
@@ -216,7 +217,7 @@ func resolveSource(tx *sql.Tx, source string) (string, error) {
 	seen := map[string]bool{}
 	for {
 		if seen[source] {
-			return "", errors.New("redirecionamento de evidência circular")
+			return "", localization.New("archive.circular_evidence_redirect")
 		}
 		seen[source] = true
 		var next string

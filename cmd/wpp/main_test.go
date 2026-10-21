@@ -23,7 +23,7 @@ func TestOfflineCLIWorkflow(t *testing.T) {
 			t.Fatalf("%v: %v", cmd, err)
 		}
 	}
-	if !strings.Contains(out.String(), "não confirmados") {
+	if !strings.Contains(out.String(), "unconfirmed") {
 		t.Fatal("status lacks uncertainty")
 	}
 }
@@ -74,7 +74,7 @@ func TestChatListingIdentifiesUnnamedGroupsAndContacts(t *testing.T) {
 	if err = printChats(db, &out); err != nil {
 		t.Fatal(err)
 	}
-	for _, expected := range []string{"TIPO", "grupo", "contato", "Grupo conhecido", "Grupo (nome indisponível)", "Contato (nome indisponível)"} {
+	for _, expected := range []string{"TYPE", "group", "contact", "Grupo conhecido", "Group (name unavailable)", "Contact (name unavailable)"} {
 		if !strings.Contains(out.String(), expected) {
 			t.Fatalf("listagem sem identificação esperada %q: %s", expected, out.String())
 		}

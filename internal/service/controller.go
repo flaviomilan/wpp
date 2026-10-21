@@ -4,18 +4,18 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"go.mau.fi/whatsmeow/types"
 	"path/filepath"
 	"rsc.io/qr"
 	"sync"
 	"time"
 	"wpp/internal/archive"
+	"wpp/internal/localization"
 	"wpp/internal/transcription"
 	"wpp/internal/whatsapp"
 )
 
-var ErrReadOnly = errors.New("outra captura controla este diretório; encerre-a e reabra o painel para assumir o controle")
+var ErrReadOnly = localization.New("backend.another_capture_process_controls_this_directory_stop_it_and_reopen")
 
 type Settings struct {
 	Capture       bool   `json:"capture_enabled"`
@@ -32,10 +32,10 @@ type Settings struct {
 func (s Settings) audioConfig() (transcription.Config, error) {
 	timeout, e := time.ParseDuration(s.Timeout)
 	if e != nil || timeout <= 0 {
-		return transcription.Config{}, invalid("Informe um tempo limite positivo, como 30m.")
+		return transcription.Config{}, invalid("backend.enter_a_positive_time_limit_such_as_30m")
 	}
 	if !transcription.ValidLanguage(s.Language) || s.Threads < 0 || s.Threads > 256 || len(s.Vocabulary) > 2048 {
-		return transcription.Config{}, invalid("Confira idioma, threads (0 a 256) e vocabulário (até 2048 bytes).")
+		return transcription.Config{}, invalid("backend.check_language_threads_0_to_256_and_vocabulary_up_to")
 	}
 	return transcription.Config{Whisper: s.Whisper, FFmpeg: s.FFmpeg, Model: s.Model, Language: s.Language, Prompt: s.Vocabulary, Threads: s.Threads, Timeout: timeout}, nil
 }
@@ -48,19 +48,22 @@ type Options struct {
 	EngineFactory      func(context.Context, transcription.Config) (transcription.Engine, error)
 }
 type Snapshot struct {
-	Owner          bool                `json:"owner"`
-	Linked         bool                `json:"linked"`
-	Connection     string              `json:"connection"`
-	Error          string              `json:"error,omitempty"`
-	Settings       Settings            `json:"settings"`
-	AudioSource    string              `json:"audio_source,omitempty"`
-	AudioPhase     string              `json:"audio_phase,omitempty"`
-	AudioError     string              `json:"audio_error,omitempty"`
-	ExportError    string              `json:"export_error,omitempty"`
-	QRAvailable    bool                `json:"qr_available"`
-	Operations     []archive.Operation `json:"operations"`
-	HistoryRunning bool                `json:"history_running"`
-	AudioAvailable bool                `json:"audio_available"`
+	Owner           bool                `json:"owner"`
+	Linked          bool                `json:"linked"`
+	Connection      string              `json:"connection"`
+	ErrorCode       string              `json:"error_code,omitempty"`
+	AudioErrorCode  string              `json:"audio_error_code,omitempty"`
+	ExportErrorCode string              `json:"export_error_code,omitempty"`
+	Error           string              `json:"error,omitempty"`
+	Settings        Settings            `json:"settings"`
+	AudioSource     string              `json:"audio_source,omitempty"`
+	AudioPhase      string              `json:"audio_phase,omitempty"`
+	AudioError      string              `json:"audio_error,omitempty"`
+	ExportError     string              `json:"export_error,omitempty"`
+	QRAvailable     bool                `json:"qr_available"`
+	Operations      []archive.Operation `json:"operations"`
+	HistoryRunning  bool                `json:"history_running"`
+	AudioAvailable  bool                `json:"audio_available"`
 }
 type Controller struct {
 	store                 *archive.Store
@@ -147,7 +150,7 @@ func New(ctx context.Context, store *archive.Store, opts Options) (*Controller, 
 		})
 	} else {
 		c.connection = "external"
-		c.errorText = ErrReadOnly.Error()
+		c.errorText = "backend.another_capture_process_controls_this_directory_stop_it_and_reopen"
 	}
 	return c, nil
 }
@@ -178,9 +181,9 @@ func (c *Controller) onConnectionEvent(event Event) {
 		c.connection = event.Kind
 		c.blocked = true
 		if event.Kind == "needs_login" {
-			c.errorText = "Sessão revogada. Conecte novamente pelo QR code."
+			c.errorText = "backend.session_revoked_link_again_using_the_qr_code"
 		} else {
-			c.errorText = "Conexão interrompida pelo WhatsApp. Tente conectar novamente."
+			c.errorText = "backend.whatsapp_disconnected_try_connecting_again"
 		}
 		c.history.pause()
 	case "activity":
@@ -202,7 +205,7 @@ func (c *Controller) Snapshot() (Snapshot, error) {
 			status = c.connection
 		}
 	}
-	return Snapshot{Owner: c.owner, Linked: linked, Connection: status, Error: detail, Settings: c.settings, AudioSource: audioSource, AudioPhase: audioPhase, AudioError: audioError, ExportError: c.exports.status(), QRAvailable: len(c.connections.QR()) > 0, Operations: ops, HistoryRunning: c.history.active(), AudioAvailable: audioAvailable}, nil
+	return Snapshot{Owner: c.owner, Linked: linked, Connection: status, Error: localMessage(detail), ErrorCode: localization.CodeForKey(detail), Settings: c.settings, AudioSource: audioSource, AudioPhase: audioPhase, AudioError: localMessage(audioError), AudioErrorCode: localization.CodeForKey(audioError), ExportError: localMessage(c.exports.status()), ExportErrorCode: localization.CodeForKey(c.exports.status()), QRAvailable: len(c.connections.QR()) > 0, Operations: ops, HistoryRunning: c.history.active(), AudioAvailable: audioAvailable}, nil
 }
 func (c *Controller) QR() []byte { return c.connections.QR() }
 func (c *Controller) saveSettingsLocked() error {
@@ -223,7 +226,7 @@ func (c *Controller) SetCapture(on bool) error {
 		return ErrReadOnly
 	}
 	if c.closed {
-		return conflict("O painel está encerrando.")
+		return conflict("backend.the_panel_is_shutting_down")
 	}
 	previous := c.settings.Capture
 	c.settings.Capture = on
@@ -248,7 +251,7 @@ func (c *Controller) SetTranscription(on bool) error {
 		return ErrReadOnly
 	}
 	if c.closed {
-		return conflict("O painel está encerrando.")
+		return conflict("backend.the_panel_is_shutting_down")
 	}
 	previous := c.settings.Transcription
 	c.settings.Transcription = on
@@ -264,7 +267,7 @@ func validChat(id string) bool {
 }
 func (c *Controller) Track(id string, on bool) error {
 	if !validChat(id) {
-		return invalid("Identificador de conversa inválido.")
+		return invalid("backend.invalid_chat_identifier")
 	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -287,7 +290,7 @@ func (c *Controller) acquire(ctx context.Context, connect bool) (Transport, func
 	blocked := c.blocked
 	c.mu.Unlock()
 	if blocked && connect {
-		return nil, nil, invalid("Confira a conexão e o armazenamento antes de continuar.")
+		return nil, nil, invalid("backend.check_the_connection_and_storage_before_continuing")
 	}
 	return c.connections.acquire(ctx, connect)
 }
@@ -298,7 +301,7 @@ func (c *Controller) closeIdle() {
 	if err := c.connections.idle(keep); err != nil && c.ctx.Err() == nil {
 		c.mu.Lock()
 		c.connection = "error"
-		c.errorText = "Falha ao encerrar a conexão."
+		c.errorText = "backend.failed_to_close_the_connection"
 		c.mu.Unlock()
 	}
 }
@@ -313,7 +316,7 @@ func (c *Controller) submitSource(kind, chat, source string, fn func(context.Con
 		return archive.Operation{}, ErrReadOnly
 	}
 	if closed {
-		return archive.Operation{}, conflict("O painel está encerrando.")
+		return archive.Operation{}, conflict("backend.the_panel_is_shutting_down")
 	}
 	if failure != nil {
 		return archive.Operation{}, &archive.PersistenceError{Err: failure}
@@ -365,16 +368,16 @@ func (c *Controller) Pair() (archive.Operation, error) {
 		c.blocked = false
 		c.errorText = ""
 		c.mu.Unlock()
-		if err := c.update(task, "running", "discovering", "Conta conectada. Atualizando conversas.", 0, 0); err != nil {
+		if err := c.update(task, "running", "discovering", "backend.account_connected_updating_chats", 0, 0); err != nil {
 			return err
 		}
 		if e = t.Discover(ctx); e != nil {
-			if err := c.update(task, "warning", "finished", "Conta conectada; algumas conversas ainda não foram atualizadas.", 0, 0); err != nil {
+			if err := c.update(task, "warning", "finished", "backend.account_connected_some_chats_have_not_been_updated_yet", 0, 0); err != nil {
 				return err
 			}
 			return nil
 		}
-		if err := c.update(task, "running", "finished", "Conta conectada e conversas atualizadas.", 0, 0); err != nil {
+		if err := c.update(task, "running", "finished", "backend.account_connected_and_chats_updated", 0, 0); err != nil {
 			return err
 		}
 		return nil
@@ -391,7 +394,7 @@ func (c *Controller) Discover() (archive.Operation, error) {
 			return err
 		}
 		if e = t.Discover(ctx); e != nil {
-			return invalid("Não foi possível atualizar todas as conversas. Tente novamente.")
+			return invalid("backend.could_not_update_all_chats_try_again")
 		}
 		if err := c.update(task, "running", "finished", "Conversas atualizadas.", 0, 0); err != nil {
 			return err
@@ -401,7 +404,7 @@ func (c *Controller) Discover() (archive.Operation, error) {
 }
 func (c *Controller) Export(chat string) (archive.Operation, error) {
 	if chat != "" && !validChat(chat) {
-		return archive.Operation{}, invalid("Identificador inválido.")
+		return archive.Operation{}, invalid("backend.invalid_identifier")
 	}
 	return c.submit("export", chat, func(ctx context.Context, task *task) error {
 		if e := ctx.Err(); e != nil {
@@ -412,7 +415,7 @@ func (c *Controller) Export(chat string) (archive.Operation, error) {
 		}
 		e := c.exports.exportContext(ctx, chat, true)
 		if e != nil {
-			return invalid("A exportação falhou. As mensagens continuam salvas no SQLite.")
+			return invalid("backend.export_failed_messages_remain_saved_in_sqlite")
 		}
 		if err := c.update(task, "running", "finished", "JSONL atualizado em "+c.opts.ExportDir+".", 0, 0); err != nil {
 			return err
@@ -422,7 +425,7 @@ func (c *Controller) Export(chat string) (archive.Operation, error) {
 }
 func (c *Controller) Sync(chat string) (archive.Operation, error) {
 	if !validChat(chat) {
-		return archive.Operation{}, invalid("Identificador inválido.")
+		return archive.Operation{}, invalid("backend.invalid_identifier")
 	}
 	canonical, e := c.store.Canonical(chat)
 	if e != nil {
@@ -441,7 +444,7 @@ func (c *Controller) Sync(chat string) (archive.Operation, error) {
 		}
 	}
 	if selected == nil || !selected.Tracked {
-		return archive.Operation{}, conflict("Ative o acompanhamento da conversa antes de sincronizar.")
+		return archive.Operation{}, conflict("backend.track_chat_before_sync")
 	}
 	return c.submit("sync", chat, func(ctx context.Context, task *task) error {
 		t, release, e := c.acquire(ctx, true)
@@ -449,7 +452,7 @@ func (c *Controller) Sync(chat string) (archive.Operation, error) {
 			return e
 		}
 		defer release()
-		if err := c.update(task, "running", "history", "Buscando o histórico disponível no celular.", 0, 0); err != nil {
+		if err := c.update(task, "running", "history", "backend.retrieving_history_available_on_the_phone", 0, 0); err != nil {
 			return err
 		}
 		releaseHistory, waitErr := c.history.queue.acquire(ctx, true)
@@ -500,7 +503,7 @@ func (c *Controller) Sync(chat string) (archive.Operation, error) {
 					warnings = true
 					break
 				}
-				if err := c.update(task, "running", "audio", fmt.Sprintf("Processando áudios: %d de %d.", completed, len(ids)), len(ids), completed); err != nil {
+				if err := c.update(task, "running", "audio", "backend.processing_audio_completed_of_total", len(ids), completed); err != nil {
 					return err
 				}
 				releaseAudio, waitErr := c.audio.queue.acquire(ctx, true)
@@ -551,9 +554,9 @@ func (c *Controller) Sync(chat string) (archive.Operation, error) {
 		if warnings {
 			state = "warning"
 		}
-		detail := "Execução concluída; cobertura do histórico não confirmada."
+		detail := "backend.operation_completed_history_coverage_remains_unconfirmed"
 		if warnings {
-			detail = "Execução encerrada com pendências; confira o histórico e a fila de áudios."
+			detail = "backend.operation_finished_with_outstanding_items_check_history_and_the_audio"
 		}
 		if err := c.update(task, state, "finished", detail, len(ids), completed); err != nil {
 			return err
@@ -584,12 +587,12 @@ func (c *Controller) Configure(settings Settings) (archive.Operation, error) {
 		if e != nil {
 			return e
 		}
-		if err := c.update(t, "running", "validating", "Validando o motor e o modelo de transcrição.", 0, 0); err != nil {
+		if err := c.update(t, "running", "validating", "backend.validating_the_transcription_engine_and_model", 0, 0); err != nil {
 			return err
 		}
 		engine, e := c.opts.EngineFactory(ctx, cfg)
 		if e != nil {
-			return invalid("Não foi possível validar os ajustes. Confira executáveis, modelo, idioma e limites.")
+			return invalid("backend.could_not_validate_settings_check_executables_model_language_and_limits")
 		}
 		c.mu.Lock()
 		defer c.mu.Unlock()

@@ -62,7 +62,7 @@ func (e *exportCoordinator) status() string {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	if e.last != nil {
-		return "Falha ao exportar JSONL. Confira o diretório de exportação e tente Exportar todas em Ajustes."
+		return "backend.jsonl_export_failed_check_the_export_directory_and_try_export"
 	}
 	return ""
 }

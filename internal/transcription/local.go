@@ -16,6 +16,7 @@ import (
 	"time"
 	"unicode/utf8"
 	"wpp/internal/archive"
+	"wpp/internal/localization"
 )
 
 type Config struct {
@@ -39,31 +40,31 @@ func NewLocal(ctx context.Context, c Config) (local *Local, resultErr error) {
 		c.Language = "pt"
 	}
 	if !ValidLanguage(c.Language) {
-		return nil, errors.New("idioma não suportado; use pt, en, es ou auto")
+		return nil, localization.New("backend.unsupported_audio_language_use_pt_en_es_or_auto")
 	}
 	if c.Threads == 0 {
 		c.Threads = min(runtime.NumCPU(), 8)
 	}
 	if c.Threads < 1 || c.Threads > 256 {
-		return nil, errors.New("threads deve ficar entre 1 e 256")
+		return nil, localization.New("backend.threads_must_be_between_1_and_256")
 	}
 	if c.Timeout <= 0 {
-		return nil, errors.New("timeout da transcrição deve ser positivo")
+		return nil, localization.New("backend.transcription_timeout_must_be_positive")
 	}
 	if c.Language != "en" && strings.Contains(filepath.Base(c.Model), ".en.") {
-		return nil, errors.New("use um modelo multilíngue para este idioma")
+		return nil, localization.New("backend.use_a_multilingual_model_for_this_language")
 	}
 	if len(c.Prompt) > 2048 {
-		return nil, errors.New("vocabulário da transcrição excede 2048 bytes")
+		return nil, localization.New("backend.transcription_vocabulary_exceeds_2048_bytes")
 	}
 	var err error
 	c.Whisper, err = exec.LookPath(c.Whisper)
 	if err != nil {
-		return nil, errors.New("whisper-cli não encontrado; configure --whisper-bin")
+		return nil, localization.New("backend.whisper_cli_not_found_configure_whisper_bin")
 	}
 	c.FFmpeg, err = exec.LookPath(c.FFmpeg)
 	if err != nil {
-		return nil, errors.New("ffmpeg não encontrado")
+		return nil, localization.New("backend.ffmpeg_not_found")
 	}
 	c.Model, err = filepath.Abs(c.Model)
 	if err != nil {
@@ -71,12 +72,12 @@ func NewLocal(ctx context.Context, c Config) (local *Local, resultErr error) {
 	}
 	file, err := os.Open(c.Model)
 	if err != nil {
-		return nil, errors.New("modelo Whisper não encontrado; configure --whisper-model")
+		return nil, localization.New("backend.whisper_model_not_found_configure_whisper_model")
 	}
 	defer func() { resultErr = errors.Join(resultErr, file.Close()) }()
 	info, err := file.Stat()
 	if err != nil || !info.Mode().IsRegular() {
-		return nil, errors.New("modelo Whisper inválido")
+		return nil, localization.New("backend.invalid_whisper_model")
 	}
 	modelHash, err := hashModel(ctx, file)
 	if err != nil {
@@ -86,7 +87,7 @@ func NewLocal(ctx context.Context, c Config) (local *Local, resultErr error) {
 	defer cancel()
 	raw, err := exec.CommandContext(versionCtx, c.Whisper, "--version").Output()
 	if err != nil {
-		return nil, errors.New("não foi possível executar whisper-cli --version")
+		return nil, localization.New("backend.could_not_run_whisper_cli_version")
 	}
 	version := strings.TrimSpace(string(raw))
 	if len(version) > 256 {
@@ -105,11 +106,11 @@ func (l *Local) TranscribePhased(ctx context.Context, audio, dir string, phase f
 	command.Stdout = io.Discard
 	command.Stderr = io.Discard
 	if err := command.Run(); err != nil {
-		return result, errors.New("conversão de áudio falhou")
+		return result, localization.New("backend.audio_conversion_failed")
 	}
 	info, err := os.Stat(wav)
 	if err != nil || info.Size() >= 256*1024*1024-4096 {
-		return result, errors.New("áudio convertido excede 256 MiB")
+		return result, localization.New("backend.converted_audio_exceeds_256_mib")
 	}
 	output := filepath.Join(dir, "result")
 	phase("transcribing")
@@ -121,16 +122,16 @@ func (l *Local) TranscribePhased(ctx context.Context, audio, dir string, phase f
 	command.Stdout = io.Discard
 	command.Stderr = io.Discard
 	if err = command.Run(); err != nil {
-		return result, errors.New("motor Whisper falhou")
+		return result, localization.New("backend.whisper_engine_failed")
 	}
 	file, err := os.Open(output + ".json")
 	if err != nil {
-		return result, errors.New("motor Whisper não produziu JSON")
+		return result, localization.New("backend.whisper_engine_did_not_produce_json")
 	}
 	defer func() { resultErr = errors.Join(resultErr, file.Close()) }()
 	raw, err := io.ReadAll(io.LimitReader(file, 16*1024*1024+1))
 	if err != nil || len(raw) > 16*1024*1024 {
-		return result, errors.New("saída Whisper excede limite")
+		return result, localization.New("backend.whisper_output_exceeds_the_limit")
 	}
 	result, err = parseWhisper(raw)
 	if err != nil {
@@ -154,16 +155,16 @@ func parseWhisper(raw []byte) (archive.Transcript, error) {
 	}
 	var result archive.Transcript
 	if !utf8.Valid(raw) {
-		return result, errors.New("JSON Whisper não é UTF-8")
+		return result, localization.New("backend.whisper_json_is_not_utf_8")
 	}
 	if err := json.Unmarshal(raw, &output); err != nil {
-		return result, errors.New("JSON Whisper inválido")
+		return result, localization.New("backend.invalid_whisper_json")
 	}
 	if output.Params.Translate {
-		return result, errors.New("tradução inesperada")
+		return result, localization.New("backend.unexpected_translation")
 	}
 	if output.Result.Language == "" {
-		return result, errors.New("idioma não identificado")
+		return result, localization.New("backend.language_not_identified")
 	}
 	var text []string
 	for _, segment := range output.Transcription {
@@ -172,7 +173,7 @@ func parseWhisper(raw []byte) (archive.Transcript, error) {
 			continue
 		}
 		if segment.Offsets.From < 0 || segment.Offsets.To < segment.Offsets.From {
-			return result, errors.New("tempos inválidos")
+			return result, localization.New("backend.invalid_timestamps")
 		}
 		result.Segments = append(result.Segments, archive.TranscriptSegment{StartMS: segment.Offsets.From, EndMS: segment.Offsets.To, Text: value})
 		text = append(text, value)
@@ -180,7 +181,7 @@ func parseWhisper(raw []byte) (archive.Transcript, error) {
 	result.Text = strings.Join(text, "\n")
 	result.Language = output.Result.Language
 	if result.Text == "" || len(result.Text) > 4*1024*1024 {
-		return result, errors.New("fala não reconhecida ou texto acima do limite")
+		return result, localization.New("backend.speech_not_recognized_or_text_exceeds_the_limit")
 	}
 	return result, nil
 }

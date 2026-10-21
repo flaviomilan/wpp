@@ -13,13 +13,13 @@ export function createNavigation(ctx) {
   const previous=ctx.model.state.view;
   scrolls[previous]={page:window.scrollY,messages:ctx.$('messages').scrollTop};
   ctx.requests.invalidate();ctx.model.state.view=view;ctx.model.state.version++;
-  ctx.model.readonlyRetryNotice='';ctx.$('notice').classList.add('hidden');
+  ctx.model.readonlyRetryNotice='';ctx.model.readonlyRetryCode='';ctx.$('notice').classList.add('hidden');
   for(const key of Object.keys(ctx.model.labels))ctx.$(key+'-view').classList.toggle('hidden',key!==view);
   document.querySelectorAll('[data-view]').forEach(button=>{
    button.classList.toggle('active',button.dataset.view===view);
    if(button.dataset.view===view)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');
   });
-  ctx.$('page-title').textContent=ctx.model.labels[view][0];ctx.$('page-description').textContent=ctx.model.labels[view][1];ctx.$('breadcrumb').textContent='Arquivo / '+ctx.model.labels[view][0];
+  ctx.bindText(ctx.$('page-title'),()=>ctx.model.labels[view][0]);ctx.bindText(ctx.$('page-description'),()=>ctx.model.labels[view][1]);ctx.bindText(ctx.$('breadcrumb'),()=>ctx.t("ui.archive")+ctx.model.labels[view][0]);
   ctx.$('discover').classList.toggle('hidden',view!=='groups');
   if(view==='settings'){
    category=section;
@@ -51,19 +51,19 @@ export function createNavigation(ctx) {
  function renderOnboarding(snapshot){
   let title='',description='',action='',target;
   if(!snapshot.owner){ctx.$('onboarding').classList.add('hidden');return;}
-  if(!snapshot.linked){title='Seu arquivo começa aqui';description='Vincule sua conta para descobrir conversas. Seu arquivo continua disponível para consulta.';action='Conectar conta';target=()=>changeView('settings','account');}
+  if(!snapshot.linked){title="ui.your_archive_starts_here";description="ui.link_your_account_to_discover_chats_your_archive_remains_available";action="ui.connect_account";target=()=>changeView('settings','account');}
   else if(!ctx.model.state.chats.some(chat=>chat.Tracked)){
-   title='Escolha o que acompanhar';description='Descubra conversas e acompanhe somente as que deseja arquivar.';action=ctx.model.state.chats.length?'Escolher conversas':'Descobrir conversas';
+   title="ui.choose_what_to_track";description="ui.discover_chats_and_track_only_those_you_want_to_archive";action=ctx.model.state.chats.length?"ui.choose_chats":"ui.discover_chats";
    target=()=>ctx.safely(async()=>{changeView('groups');if(ctx.model.state.chats.length)await ctx.switchChatTab('available');else await ctx.control('/api/chats/discover');});
-  } else if(!snapshot.settings.capture_enabled){title='Seu arquivo está pronto';description='Ative a captura contínua ou sincronize uma conversa quando precisar. Transcrição é opcional.';action='Configurar captura';target=()=>changeView('settings','capture');}
+  } else if(!snapshot.settings.capture_enabled){title="ui.your_archive_is_ready";description="ui.enable_continuous_capture_or_sync_a_chat_when_needed_transcription";action="ui.configure_capture";target=()=>changeView('settings','capture');}
   ctx.$('onboarding').classList.toggle('hidden',!title);
-  ctx.$('onboarding-title').textContent=title;ctx.$('onboarding-description').textContent=description;ctx.$('onboarding-action').textContent=action;ctx.$('onboarding-action').onclick=target;
+  ctx.bindText(ctx.$('onboarding-title'),()=>title?ctx.t(title):"");ctx.bindText(ctx.$('onboarding-description'),()=>description?ctx.t(description):"");ctx.bindText(ctx.$('onboarding-action'),()=>action?ctx.t(action):"");ctx.$('onboarding-action').onclick=target;
  }
  async function poll(){
   if(polling||document.hidden)return;polling=true;const token=ctx.requests.begin('poll');
   try{
-   await ctx.loadService();if(!token.current())return;await ctx.loadChats();if(!token.current())return;
-   const selected=ctx.$('audio-chat').value;ctx.options(ctx.$('audio-chat'),ctx.model.state.chats.map(c=>({value:c.ID,label:c.Name||c.ID})),'Todas as conversas');ctx.$('audio-chat').value=selected;
+   await ctx.loadPreferences();if(!token.current())return;await ctx.loadService();if(!token.current())return;await ctx.loadChats();if(!token.current())return;
+   const selected=ctx.$('audio-chat').value;ctx.options(ctx.$('audio-chat'),ctx.model.state.chats.map(c=>({value:c.ID,label:c.Name||c.ID})),()=>ctx.t("ui.all_chats"));ctx.$('audio-chat').value=selected;
    if(ctx.model.state.view==='groups'&&ctx.model.state.chat&&ctx.chatByID(ctx.model.state.chat)?.Generation!==ctx.model.displayedGeneration){
     if(ctx.model.state.offset===0&&window.scrollY<30&&ctx.$('messages').scrollTop<30&&!ctx.$('message-search').value&&!ctx.$('person-filter').value)await ctx.loadMessages();
     else ctx.$('new-messages').classList.remove('hidden');

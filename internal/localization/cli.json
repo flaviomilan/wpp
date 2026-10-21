@@ -1,0 +1,222 @@
+{
+  "cli.session_and_database_directory": {
+    "en": "session and database directory",
+    "pt-BR": "diretório de sessão e banco"
+  },
+  "cli.jsonl_export_directory": {
+    "en": "JSONL export directory",
+    "pt-BR": "diretório dos arquivos JSONL"
+  },
+  "cli.display_time_zone_for_the_panel_and_status": {
+    "en": "display time zone for the panel and status",
+    "pt-BR": "fuso horário de exibição no painel e status"
+  },
+  "cli.local_web_interface_address": {
+    "en": "local web interface address",
+    "pt-BR": "endereço local da interface web"
+  },
+  "cli.multilingual_ggml_model_enables_transcription_during_run": {
+    "en": "multilingual ggml model; enables transcription during run",
+    "pt-BR": "modelo ggml multilíngue; habilita transcrição durante run"
+  },
+  "cli.whisper_cpp_executable": {
+    "en": "whisper.cpp executable",
+    "pt-BR": "executável whisper.cpp"
+  },
+  "cli.ffmpeg_executable": {
+    "en": "ffmpeg executable",
+    "pt-BR": "executável ffmpeg"
+  },
+  "cli.audio_recognition_language_auto_to_detect": {
+    "en": "audio recognition language; auto to detect",
+    "pt-BR": "idioma dos áudios; auto para detectar"
+  },
+  "cli.names_and_specific_terms_to_guide_recognition": {
+    "en": "names and specific terms to guide recognition",
+    "pt-BR": "nomes e termos específicos para orientar reconhecimento"
+  },
+  "cli.transcription_threads_0_uses_up_to_8_cpus": {
+    "en": "transcription threads; 0 uses up to 8 CPUs",
+    "pt-BR": "threads de transcrição; 0 usa até 8 CPUs"
+  },
+  "cli.time_limit_per_audio_without_truncating_content": {
+    "en": "time limit per audio, without truncating content",
+    "pt-BR": "limite por áudio, sem truncar conteúdo"
+  },
+  "cli.specify_a_command": {
+    "en": "specify a command",
+    "pt-BR": "informe um comando"
+  },
+  "cli.usage_wpp_audio_status_wpp_audio_retry_source_or": {
+    "en": "usage: wpp audio status, wpp audio retry <source> or wpp audio correct <source> <transcript.json>",
+    "pt-BR": "uso: wpp audio status, wpp audio retry <fonte> ou wpp audio correct <fonte> <transcricao.json>"
+  },
+  "cli.usage_wpp_s_next_status_group_or_s_ack": {
+    "en": "usage: wpp %s next|status <group> or %s ack <group> <batch>",
+    "pt-BR": "uso: wpp %s next|status <grupo> ou %s ack <grupo> <lote>"
+  },
+  "cli.use_a_group_identifier_ending_in_g_us": {
+    "en": "use a group identifier ending in @g.us",
+    "pt-BR": "use um identificador de grupo @g.us"
+  },
+  "cli.invalid_subcommand_or_arguments_for_s": {
+    "en": "invalid subcommand or arguments for %s",
+    "pt-BR": "subcomando ou argumentos de %s inválidos"
+  },
+  "cli.usage_wpp_evidence_group_source": {
+    "en": "usage: wpp evidence <group> <source>",
+    "pt-BR": "uso: wpp evidence <grupo> <fonte>"
+  },
+  "cli.usage_wpp": {
+    "en": "usage: wpp ",
+    "pt-BR": "uso: wpp "
+  },
+  "cli.use_the_full_group_or_contact_id_shown_by": {
+    "en": "use the full group or contact ID shown by wpp chats",
+    "pt-BR": "use o ID completo de um grupo ou contato exibido por wpp chats"
+  },
+  "cli.usage_wpp_chats_groups": {
+    "en": "usage: wpp chats [--groups]",
+    "pt-BR": "uso: wpp chats [--groups]"
+  },
+  "cli.unexpected_arguments": {
+    "en": "unexpected arguments",
+    "pt-BR": "argumentos inesperados"
+  },
+  "cli.unknown_command_s": {
+    "en": "unknown command: %s",
+    "pt-BR": "comando desconhecido: %s"
+  },
+  "cli.invalid_time_zone": {
+    "en": "invalid time zone",
+    "pt-BR": "fuso horário inválido"
+  },
+  "cli.transcript_json_exceeds_16_mib": {
+    "en": "transcript JSON exceeds 16 MiB",
+    "pt-BR": "transcrição JSON excede 16 MiB"
+  },
+  "cli.provide_a_single_transcript_json_object": {
+    "en": "provide a single transcript JSON object",
+    "pt-BR": "informe um único objeto JSON de transcrição"
+  },
+  "cli.transcription_queue": {
+    "en": "Transcription queue:",
+    "pt-BR": "Fila de transcrição:"
+  },
+  "cli.s_s_s_attempts_d_s": {
+    "en": "%s · %s · %s · attempts %d · %s\n",
+    "pt-BR": "%s · %s · %s · tentativas %d · %s\n"
+  },
+  "cli.up_to_100_recent_records_browse_all_pages_in": {
+    "en": "Up to 100 recent records. Browse all pages in the web interface.",
+    "pt-BR": "Até 100 registros recentes. Consulte todas as páginas na interface."
+  },
+  "cli.control_panel": {
+    "en": "Control panel:",
+    "pt-BR": "Painel de controle:"
+  },
+  "cli.closing_the_tab_keeps_processing_active_ctrl_c_stops": {
+    "en": "Closing the tab keeps processing active. Ctrl+C stops the panel and capture.",
+    "pt-BR": "Fechar a aba mantém o processamento. Ctrl+C encerra o painel e a captura."
+  },
+  "cli.run_wpp_login_first": {
+    "en": "run wpp login first",
+    "pt-BR": "execute wpp login primeiro"
+  },
+  "cli.configure_at_least_one_chat_with_wpp_track_id": {
+    "en": "configure at least one chat with wpp track <id>",
+    "pt-BR": "configure ao menos uma conversa com wpp track <id>"
+  },
+  "cli.capture_requested_ctrl_c_stops_capture_and_completes_pending": {
+    "en": "Capture requested. Ctrl+C stops capture and completes pending exports.",
+    "pt-BR": "Captura solicitada. Ctrl+C encerra e conclui as exportações pendentes."
+  },
+  "cli.no_new_events": {
+    "en": "No new events.",
+    "pt-BR": "Nenhum evento novo."
+  },
+  "cli.batch_acknowledged": {
+    "en": "Batch acknowledged:",
+    "pt-BR": "Lote confirmado:"
+  },
+  "cli.tracking_updated": {
+    "en": "Tracking updated:",
+    "pt-BR": "Acompanhamento atualizado:"
+  },
+  "cli.jsonl_files_rebuilt_in": {
+    "en": "JSONL files rebuilt in",
+    "pt-BR": "Arquivos JSONL reconstruídos em"
+  },
+  "cli.session_already_linked_run_wpp_chats_or_wpp_run": {
+    "en": "Session already linked. Run wpp chats or wpp run.",
+    "pt-BR": "Sessão já vinculada. Execute wpp chats ou wpp run."
+  },
+  "cli.could_not_connect_to_whatsapp": {
+    "en": "could not connect to WhatsApp",
+    "pt-BR": "não foi possível conectar ao WhatsApp"
+  },
+  "cli.on_your_phone_whatsapp_linked_devices_link_a_device": {
+    "en": "On your phone: WhatsApp → Linked devices → Link a device.",
+    "pt-BR": "No celular: WhatsApp → Dispositivos conectados → Conectar dispositivo."
+  },
+  "cli.pairing_ended_try_wpp_login_again": {
+    "en": "pairing ended; try wpp login again",
+    "pt-BR": "pareamento encerrado; tente wpp login novamente"
+  },
+  "cli.account_linked_waiting_10_seconds_for_initial_synchronization": {
+    "en": "Account linked. Waiting 10 seconds for initial synchronization.",
+    "pt-BR": "Conta vinculada. Aguardando a sincronização inicial por 10 segundos."
+  },
+  "cli.discovery_incomplete_run_wpp_chats_again": {
+    "en": "Discovery incomplete; run wpp chats again.",
+    "pt-BR": "Descoberta incompleta; execute wpp chats novamente."
+  },
+  "cli.pairing_incomplete_try_again": {
+    "en": "pairing incomplete; try again",
+    "pt-BR": "pareamento não concluído; tente novamente"
+  },
+  "cli.invalid_command": {
+    "en": "invalid command",
+    "pt-BR": "comando inválido"
+  },
+  "cli.connection_timed_out": {
+    "en": "connection timed out",
+    "pt-BR": "tempo limite de conexão excedido"
+  },
+  "cli.id_type_name_tracked": {
+    "en": "ID\tTYPE\tNAME\tTRACKED",
+    "pt-BR": "ID\tTIPO\tNOME\tACOMPANHANDO"
+  },
+  "cli.contact": {
+    "en": "contact",
+    "pt-BR": "contato"
+  },
+  "cli.group": {
+    "en": "group",
+    "pt-BR": "grupo"
+  },
+  "cli.s_s_messages_d_first_s_last_s_file": {
+    "en": "%s (%s)\n  Messages: %d | First: %s | Last: %s\n  File: %s\n",
+    "pt-BR": "%s (%s)\n  Mensagens: %d | Primeira: %s | Última: %s\n  Arquivo: %s\n"
+  },
+  "cli.complete_history_and_absence_of_gaps_unconfirmed": {
+    "en": "  Complete history and absence of gaps: unconfirmed.",
+    "pt-BR": "  Histórico integral e ausência de lacunas: não confirmados."
+  },
+  "cli.group_name_unavailable": {
+    "en": "Group (name unavailable)",
+    "pt-BR": "Grupo (nome indisponível)"
+  },
+  "cli.contact_name_unavailable": {
+    "en": "Contact (name unavailable)",
+    "pt-BR": "Contato (nome indisponível)"
+  },
+  "cli.error": {
+    "en": "Error:",
+    "pt-BR": "Erro:"
+  },
+  "cli.usage_wpp_global_options_command_commands_login_chats_groups": {
+    "en": "Usage: wpp [global options] <command>\nCommands: login, chats [--groups], track <id>, untrack <id>, run, status, export, serve, audio status|retry <source>, audio correct <source> <transcript.json>, language [en|pt-BR]\nJSONL events: events next|status <group>, events ack <group> <batch>\nOffline JSONL: events next|status <group>, events ack <group> <batch>, evidence <group> <source>; batch is an alias for events",
+    "pt-BR": "Uso: wpp [opções globais] <comando>\nComandos: login, chats [--groups], track <id>, untrack <id>, run, status, export, serve, audio status|retry <fonte>, audio correct <fonte> <transcricao.json>, language [en|pt-BR]\nEventos JSONL: events next|status <grupo>, events ack <grupo> <lote>\nJSONL offline: events next|status <grupo>, events ack <grupo> <lote>, evidence <grupo> <fonte>; batch é alias de events"
+  }
+}

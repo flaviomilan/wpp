@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 	"unicode/utf8"
+	"wpp/internal/localization"
 )
 
 // writeJSONL holds a consistent read-only WAL snapshot while capture continues.
@@ -58,7 +59,7 @@ func (s *Store) writeJSONL(ctx context.Context, output io.Writer, id, source str
 			return chat, err
 		}
 		if !utf8.Valid(raw) || event.SchemaVersion != "1.0" || event.EventID == "" || event.Sequence < 1 || event.AccountID == "" || event.GroupID != eventChat || event.Source != "whatsapp" || event.EventType == "" || event.Payload == nil {
-			return chat, errors.New("evento arquivado inválido")
+			return chat, localization.New("archive.invalid_archived_event")
 		}
 		var compact bytes.Buffer
 		if err = json.Compact(&compact, raw); err != nil {
@@ -76,13 +77,13 @@ func (s *Store) writeJSONL(ctx context.Context, output io.Writer, id, source str
 		return chat, err
 	}
 	if source != "" && count == 0 {
-		return chat, invalidInput("evidência não encontrada neste grupo")
+		return chat, invalidInput("archive.evidence_not_found_in_this_group")
 	}
 	return chat, tx.Commit()
 }
 func validateGroup(group string) error {
 	if !strings.HasSuffix(group, "@g.us") || strings.ContainsAny(group, "/\\\x00") {
-		return invalidInput("use um identificador de grupo @g.us")
+		return invalidInput("archive.use_a_group_identifier_ending_in_g_us")
 	}
 	return nil
 }
@@ -93,7 +94,7 @@ func (b EventBatchService) Evidence(group, source string) (string, error) {
 		return "", err
 	}
 	if source == "" {
-		return "", invalidInput("informe uma fonte")
+		return "", invalidInput("archive.specify_source")
 	}
 	if err := b.Store.migrateEvents(); err != nil {
 		return "", err

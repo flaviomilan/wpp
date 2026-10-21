@@ -135,7 +135,7 @@ func TestAudioAndSourceHTTPViewsAndReadonlyRetry(t *testing.T) {
 	cookie = nil
 	cookie = call("GET", "/").Result().Cookies()[0]
 	response = call("POST", "/api/audio/"+failed.Source+"/retry")
-	if response.Code != 200 || !strings.Contains(response.Body.String(), "controlador externo") {
+	if response.Code != 200 || !strings.Contains(response.Body.String(), "external controller") {
 		t.Fatal(response.Code, response.Body.String())
 	}
 	if call("GET", "/api/messages/unknown").Code != 404 {

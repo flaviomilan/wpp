@@ -11,12 +11,12 @@ test("module graph treats only application imports and local reads as usage",()=
   moduleUsage({"app.js":"import {boot} from './bridge.mjs'; boot();","bridge.mjs":"export {boot} from './view.mjs';","view.mjs":"export function boot(){}"},"app.js");
 });
 test("module graph rejects unreachable modules and exports retained only by tests",()=>{
-  assert.throws(()=>moduleUsage({"app.js":"console.log('ready');","unused.mjs":"export function unused(){}"},"app.js"),/Módulo sem uso/);
-  assert.throws(()=>moduleUsage({"app.js":"export function unused(){}"},"app.js"),/Export sem uso/);
-  assert.throws(()=>moduleUsage({"app.js":"export function recursive(){recursive();}"},"app.js"),/Export sem uso/);
-  assert.throws(()=>moduleUsage({"app.js":"import './missing.mjs';"},"app.js"),/ausente/);
-  assert.throws(()=>moduleUsage({"app.js":"import x from 'npm'; x();"},"app.js"),/imports locais/);
-  assert.throws(()=>moduleInfo('export function {'),/inválido/);
+  assert.throws(()=>moduleUsage({"app.js":"console.log('ready');","unused.mjs":"export function unused(){}"},"app.js"),/Module unused/);
+  assert.throws(()=>moduleUsage({"app.js":"export function unused(){}"},"app.js"),/Export unused/);
+  assert.throws(()=>moduleUsage({"app.js":"export function recursive(){recursive();}"},"app.js"),/Export unused/);
+  assert.throws(()=>moduleUsage({"app.js":"import './missing.mjs';"},"app.js"),/Missing/);
+  assert.throws(()=>moduleUsage({"app.js":"import x from 'npm'; x();"},"app.js"),/local imports/);
+  assert.throws(()=>moduleInfo('export function {'),/Invalid/);
 });
 test("named variable exports and aliases expose only the declared names",()=>{
   const info=moduleInfo('const value=1; export {value as renamed}; export const other=2; console.log(other);');

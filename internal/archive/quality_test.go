@@ -22,9 +22,9 @@ func TestTypedErrorsRetainCauseAndSafeDescription(t *testing.T) {
 		err         error
 		description string
 	}{
-		{"validation", invalidInput("paginação inválida"), "paginação inválida"},
-		{"history", &HistoryError{Err: cause}, "histórico sem confirmação"},
-		{"persistence", &PersistenceError{Err: cause}, "falha de persistência na recuperação"},
+		{"validation", invalidInput("invalid pagination"), "invalid pagination"},
+		{"history", &HistoryError{Err: cause}, "history unconfirmed"},
+		{"persistence", &PersistenceError{Err: cause}, "recovery persistence failure"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.err.Error() != tc.description {

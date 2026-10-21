@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 	"time"
+	"wpp/internal/localization"
 
 	"go.mau.fi/whatsmeow/proto/waCommon"
 	"go.mau.fi/whatsmeow/proto/waE2E"
@@ -108,7 +109,7 @@ func Normalize(evt *events.Message) (archive.Message, bool, error) {
 		}
 		key := p.GetKey()
 		if key == nil || key.GetID() == "" {
-			return m, false, fmt.Errorf("atualização sem chave da mensagem")
+			return m, false, localization.New("archive.update_has_no_message_key")
 		}
 		m.ID = key.GetID()
 		m.FromMe = key.GetFromMe()

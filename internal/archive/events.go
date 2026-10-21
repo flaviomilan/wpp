@@ -4,10 +4,10 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"reflect"
 	"strings"
 	"time"
+	"wpp/internal/localization"
 )
 
 // Event is the framework-independent, immutable public record.
@@ -542,7 +542,7 @@ func requireEventAccount(tx *sql.Tx) error {
 		return err
 	}
 	if a == "" {
-		return fmt.Errorf("conta não vinculada; execute wpp login antes de exportar eventos")
+		return localization.New("archive.account_not_linked_run_wpp_login_before_exporting_events")
 	}
 	return nil
 }

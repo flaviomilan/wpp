@@ -96,7 +96,7 @@ func TestRunUsesIntegratedControllerAndPreservesCancellation(t *testing.T) {
 					t.Fatal("invalid run accepted", scenario)
 				}
 				if scenario == "cancel" {
-					if !errors.Is(err, context.Canceled) || !bytes.Contains(out.Bytes(), []byte("Captura solicitada")) {
+					if !errors.Is(err, context.Canceled) || !bytes.Contains(out.Bytes(), []byte("Capture requested")) {
 						t.Fatal(out.String(), err)
 					}
 				}

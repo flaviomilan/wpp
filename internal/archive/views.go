@@ -5,24 +5,29 @@ import (
 	"encoding/json"
 	"errors"
 	"time"
+	"wpp/internal/localization"
 )
 
 type BrowserReply struct {
-	State     string `json:"state"`
-	Source    string `json:"source_id,omitempty"`
-	Author    string `json:"author,omitempty"`
-	Preview   string `json:"preview,omitempty"`
-	Edited    bool   `json:"edited,omitempty"`
-	Truncated bool   `json:"truncated,omitempty"`
+	State      string `json:"state"`
+	Source     string `json:"source_id,omitempty"`
+	AuthorCode string `json:"author_code,omitempty"`
+	Author     string `json:"author,omitempty"`
+	Preview    string `json:"preview,omitempty"`
+	Edited     bool   `json:"edited,omitempty"`
+	Truncated  bool   `json:"truncated,omitempty"`
 }
 type BrowserAudio struct {
 	AudioJob
+	AuthorCode    string    `json:"author_code,omitempty"`
 	Author        string    `json:"author"`
 	Time          time.Time `json:"time"`
 	Preview       string    `json:"transcript_preview,omitempty"`
 	Truncated     bool      `json:"preview_truncated,omitempty"`
 	HasTranscript bool      `json:"has_transcript"`
 	RetryEligible bool      `json:"retry_eligible"`
+	RetryCode     string    `json:"retry_code,omitempty"`
+	ErrorCode     string    `json:"error_code,omitempty"`
 	RetryReason   string    `json:"retry_reason,omitempty"`
 	Tracked       bool      `json:"tracked"`
 	Message       *Message  `json:"message,omitempty"`
@@ -73,6 +78,7 @@ func browserReply(tx *sql.Tx, m Message, names map[string]string) (*BrowserReply
 		reply.Author = personLabel(names, parent.Sender, parent.Author)
 		if parent.FromMe {
 			reply.Author = "Você"
+			reply.AuthorCode = "person.self"
 		}
 		text := messagePreview(parent)
 		reply.Preview = trimUTF8(text, 600)
@@ -122,9 +128,10 @@ func (s *Store) BrowserSource(source string) (BrowserMessage, error) {
 		if e != nil {
 			return e
 		}
-		item = BrowserMessage{SourceID: id, Message: m, Author: personLabel(names, m.Sender, m.Author), Route: route(m, names)}
+		item = BrowserMessage{SourceID: id, Message: m, Author: personLabel(names, m.Sender, m.Author), Route: route(m, names), RoutePresentation: browserRoute(m, names)}
 		if m.FromMe {
 			item.Author = "Você"
+			item.AuthorCode = "person.self"
 		}
 		return nil
 	})
@@ -148,6 +155,7 @@ func renderAudioView(job AudioJob, raw []byte, names map[string]string, tracked,
 	item.Author = personLabel(names, m.Sender, m.Author)
 	if m.FromMe {
 		item.Author = "Você"
+		item.AuthorCode = "person.self"
 	}
 	item.Time = m.Time
 	item.HasTranscript = !m.Deleted && m.Transcript != nil
@@ -158,18 +166,25 @@ func renderAudioView(job AudioJob, raw []byte, names map[string]string, tracked,
 	item.RetryEligible = metadata && !m.Deleted && (job.State == "failed" || (job.State == "pending" && job.Error != ""))
 	switch {
 	case job.State == "done":
-		item.RetryReason = "Transcrição concluída."
+		item.RetryCode = "backend.transcription_completed"
 	case job.State == "processing":
-		item.RetryReason = "O áudio já está em processamento."
+		item.RetryCode = "backend.the_audio_is_already_being_processed"
 	case m.Deleted || job.State == "cancelled":
-		item.RetryReason = "Mensagem excluída ou substituída."
+		item.RetryCode = "backend.message_deleted_or_replaced"
 	case !metadata:
-		item.RetryReason = "Sincronize a conversa para tentar recuperar os metadados do áudio."
+		item.RetryCode = "backend.sync_the_chat_to_try_retrieving_audio_metadata"
 	case !item.RetryEligible:
-		item.RetryReason = "O áudio está aguardando processamento."
+		item.RetryCode = "backend.the_audio_is_waiting_for_processing"
 	}
 	if item.RetryEligible && !item.Tracked {
-		item.RetryReason = "Acompanhe a conversa antes de processar este áudio."
+		item.RetryCode = "backend.track_the_chat_before_processing_this_audio"
+	}
+	if item.RetryCode != "" {
+		item.RetryReason = localization.Text(localization.English, item.RetryCode, nil)
+	}
+	if localization.Known(job.Error) {
+		item.ErrorCode = job.Error
+		item.Error = localization.Text(localization.English, job.Error, nil)
 	}
 	if full {
 		item.Message = &m
@@ -180,7 +195,7 @@ func (s *Store) BrowseAudioPage(offset, limit int, chat, state string) ([]Browse
 	items := []BrowserAudio{}
 	summary := map[string]int{}
 	if offset < 0 || limit < 1 || limit > 101 {
-		return nil, nil, errors.New("filtro ou paginação inválidos")
+		return nil, nil, localization.New("archive.invalid_filter_or_pagination")
 	}
 	err := s.transaction(func(tx *sql.Tx) error {
 		names, err := namesTx(tx)

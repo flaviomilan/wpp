@@ -13,6 +13,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"wpp/internal/localization"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -102,7 +103,7 @@ func (s *Store) BindAccount(id string) error {
 		var old string
 		err := tx.QueryRow("SELECT value FROM meta WHERE key='account'").Scan(&old)
 		if err == nil && old != id {
-			return errors.New("o diretório pertence a outra conta; use --data-dir diferente")
+			return localization.New("archive.the_directory_belongs_to_another_account_use_a_different_data")
 		}
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return err
@@ -266,7 +267,7 @@ func putMessageSource(tx *sql.Tx, m Message, preferredSource string) (bool, erro
 		}
 	}
 	if m.ID == "" || m.Chat == "" {
-		return false, errors.New("mensagem sem chave")
+		return false, localization.New("archive.message_has_no_key")
 	}
 	var err error
 	m.Chat, err = canonical(tx, m.Chat)
@@ -746,7 +747,7 @@ func (s *Store) InterruptAttempts() error {
 		if _, err := tx.Exec("UPDATE chats SET generation=generation+1 WHERE id IN(SELECT chat FROM attempts WHERE state='running')"); err != nil {
 			return err
 		}
-		_, err := tx.Exec("UPDATE attempts SET finished=?,state='unconfirmed',detail='Execução interrompida; recuperação não confirmada.' WHERE state='running'", time.Now().Unix())
+		_, err := tx.Exec("UPDATE attempts SET finished=?,state='unconfirmed',detail='history.interrupted' WHERE state='running'", time.Now().Unix())
 		return err
 	})
 }
@@ -763,6 +764,10 @@ func readAttempts(tx *sql.Tx, id string) ([]Attempt, error) {
 		var start, end int64
 		if err = rows.Scan(&a.ID, &a.Chat, &start, &end, &a.Anchor, &a.AnchorKey, &a.State, &a.Detail, &a.BoundaryObserved); err != nil {
 			return nil, err
+		}
+		if localization.Known(a.Detail) {
+			a.DetailCode = a.Detail
+			a.Detail = localization.Text(localization.English, a.DetailCode, nil)
 		}
 		a.Started = time.Unix(start, 0).UTC()
 		if end != 0 {

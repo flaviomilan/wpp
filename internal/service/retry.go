@@ -9,15 +9,15 @@ import (
 func audioRetryReason(state archive.AudioRetryState) string {
 	switch {
 	case state.State == "done":
-		return "Transcrição concluída."
+		return "backend.transcription_completed"
 	case state.State == "processing":
-		return "O áudio já está em processamento."
+		return "backend.the_audio_is_already_being_processed"
 	case state.Deleted || state.State == "cancelled":
-		return "Mensagem excluída ou substituída."
+		return "backend.message_deleted_or_replaced"
 	case !state.HasMetadata:
-		return "Sincronize a conversa para tentar recuperar os metadados do áudio."
+		return "backend.sync_the_chat_to_try_retrieving_audio_metadata"
 	default:
-		return "O áudio está aguardando processamento."
+		return "backend.the_audio_is_waiting_for_processing"
 	}
 }
 
@@ -38,7 +38,7 @@ func (c *Controller) RetryAudio(source string) (archive.Operation, error) {
 		return op, nil
 	}
 	if !item.Tracked {
-		return archive.Operation{}, conflict("Acompanhe a conversa antes de processar este áudio.")
+		return archive.Operation{}, conflict("backend.track_the_chat_before_processing_this_audio")
 	}
 	if !item.RetryEligible {
 		return archive.Operation{}, conflict(audioRetryReason(item))
@@ -46,7 +46,7 @@ func (c *Controller) RetryAudio(source string) (archive.Operation, error) {
 	return c.submitSource("audio_retry", item.Chat, source, func(ctx context.Context, task *task) (resultErr error) {
 		endManual := c.audio.manualRequest()
 		defer endManual()
-		if err := c.update(task, "running", "waiting_worker", "Aguardando o áudio em andamento terminar.", 1, 0); err != nil {
+		if err := c.update(task, "running", "waiting_worker", "backend.waiting_for_the_current_audio_to_finish", 1, 0); err != nil {
 			return err
 		}
 		releaseAudio, err := c.audio.queue.acquire(ctx, true)
@@ -75,7 +75,7 @@ func (c *Controller) RetryAudio(source string) (archive.Operation, error) {
 			if err := c.store.NoteAudioRetryInterrupted(source); err != nil {
 				return &archive.PersistenceError{Err: err}
 			}
-			if err := c.update(task, "warning", "paused", "Áudio reenfileirado. Ative Transcrição automática e solicite novamente este áudio.", 1, 0); err != nil {
+			if err := c.update(task, "warning", "paused", "backend.audio_requeued_enable_automatic_transcription_and_request_this_audio_again", 1, 0); err != nil {
 				return err
 			}
 			return nil
@@ -91,12 +91,12 @@ func (c *Controller) RetryAudio(source string) (archive.Operation, error) {
 			if err := c.store.NoteAudioRetryInterrupted(source); err != nil {
 				return &archive.PersistenceError{Err: err}
 			}
-			if err := c.update(task, "warning", "paused", "Áudio reenfileirado. Confira o motor, ative Transcrição automática e tente novamente.", 1, 0); err != nil {
+			if err := c.update(task, "warning", "paused", "backend.audio_requeued_check_the_engine_enable_automatic_transcription_and_try", 1, 0); err != nil {
 				return err
 			}
 			return nil
 		}
-		if err := c.update(task, "running", "connecting", "Conectando para processar somente este áudio.", 1, 0); err != nil {
+		if err := c.update(task, "running", "connecting", "backend.connecting_to_process_only_this_audio", 1, 0); err != nil {
 			return err
 		}
 		transport, release, err := c.acquire(ctx, true)
@@ -111,7 +111,7 @@ func (c *Controller) RetryAudio(source string) (archive.Operation, error) {
 			if err := c.store.NoteAudioRetryInterrupted(source); err != nil {
 				return &archive.PersistenceError{Err: err}
 			}
-			if err := c.update(task, "warning", "paused", "Áudio reenfileirado. Ative Transcrição automática e solicite novamente este áudio.", 1, 0); err != nil {
+			if err := c.update(task, "warning", "paused", "backend.audio_requeued_enable_automatic_transcription_and_request_this_audio_again", 1, 0); err != nil {
 				return err
 			}
 			return nil
@@ -127,11 +127,11 @@ func (c *Controller) RetryAudio(source string) (archive.Operation, error) {
 			return &archive.PersistenceError{Err: err}
 		}
 		if state != "done" {
-			if err := c.update(task, "warning", "finished", "A tentativa não concluiu a transcrição. Confira o erro no cartão do áudio.", 1, 1); err != nil {
+			if err := c.update(task, "warning", "finished", "backend.transcription_did_not_complete_check_the_error_on_the_audio", 1, 1); err != nil {
 				return err
 			}
 		} else {
-			if err := c.update(task, "running", "finished", "Transcrição concluída. Confira o texto na fila de áudios.", 1, 1); err != nil {
+			if err := c.update(task, "running", "finished", "backend.transcription_completed_read_the_text_in_the_audio_queue", 1, 1); err != nil {
 				return err
 			}
 		}

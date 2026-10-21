@@ -1,0 +1,210 @@
+{
+  "archive.invalid_person_id": {
+    "en": "invalid person ID",
+    "pt-BR": "ID de pessoa inválido"
+  },
+  "archive.registration_contains_an_invalid_person_id_use_the_full_exported": {
+    "en": "registration contains an invalid person ID; use the full exported ID",
+    "pt-BR": "cadastro contém ID de pessoa inválido; use o ID completo exportado"
+  },
+  "archive.account_not_linked_run_wpp_login_before_exporting_events": {
+    "en": "account not linked; run wpp login before exporting events",
+    "pt-BR": "conta não vinculada; execute wpp login antes de exportar eventos"
+  },
+  "archive.chat_not_found": {
+    "en": "chat not found",
+    "pt-BR": "conversa não encontrada"
+  },
+  "archive.correction_requires_audio_with_an_existing_transcript": {
+    "en": "correction requires audio with an existing transcript",
+    "pt-BR": "correção exige áudio com transcrição existente"
+  },
+  "archive.invalid_archived_event": {
+    "en": "invalid archived event",
+    "pt-BR": "evento arquivado inválido"
+  },
+  "archive.evidence_not_found_in_this_group": {
+    "en": "evidence not found in this group",
+    "pt-BR": "evidência não encontrada neste grupo"
+  },
+  "archive.invalid_filter_or_pagination": {
+    "en": "invalid filter or pagination",
+    "pt-BR": "filtro ou paginação inválidos"
+  },
+  "archive.group_not_found": {
+    "en": "group not found",
+    "pt-BR": "grupo não encontrado"
+  },
+  "archive.chat_identity_changed_during_export_try_again": {
+    "en": "chat identity changed during export; try again",
+    "pt-BR": "identidade da conversa mudou durante a exportação; tente novamente"
+  },
+  "archive.batch_changed_run_events_next_to_restore_it": {
+    "en": "batch changed; run events next to restore it",
+    "pt-BR": "lote alterado; execute events next para restaurar"
+  },
+  "archive.batch_is_not_the_expected_pending_batch": {
+    "en": "batch is not the expected pending batch",
+    "pt-BR": "lote não é o pendente esperado"
+  },
+  "archive.message_has_no_key": {
+    "en": "message has no key",
+    "pt-BR": "mensagem sem chave"
+  },
+  "archive.invalid_export_name": {
+    "en": "invalid export name",
+    "pt-BR": "nome de exportação inválido"
+  },
+  "archive.name_must_be_valid_utf_8_with_up_to_128": {
+    "en": "name must be valid UTF-8 with up to 128 characters",
+    "pt-BR": "nome deve ser UTF-8 válido e ter até 128 caracteres"
+  },
+  "archive.name_cannot_contain_control_characters": {
+    "en": "name cannot contain control characters",
+    "pt-BR": "nome não pode conter caracteres de controle"
+  },
+  "archive.the_directory_belongs_to_another_account_use_a_different_data": {
+    "en": "the directory belongs to another account; use a different --data-dir",
+    "pt-BR": "o diretório pertence a outra conta; use --data-dir diferente"
+  },
+  "archive.another_process_is_using_this_data_directory": {
+    "en": "another process is using this data directory",
+    "pt-BR": "outro processo está usando este diretório de dados"
+  },
+  "archive.invalid_pagination": {
+    "en": "invalid pagination",
+    "pt-BR": "paginação inválida"
+  },
+  "archive.person_not_found_in_this_group": {
+    "en": "person not found in this group",
+    "pt-BR": "pessoa não encontrada neste grupo"
+  },
+  "archive.recovery_unconfirmed_for_s": {
+    "en": "recovery unconfirmed for %s",
+    "pt-BR": "recuperação não confirmada para %s"
+  },
+  "archive.circular_evidence_redirect": {
+    "en": "circular evidence redirect",
+    "pt-BR": "redirecionamento de evidência circular"
+  },
+  "archive.audio_reservation_is_not_active": {
+    "en": "audio reservation is not active",
+    "pt-BR": "reserva de áudio não está ativa"
+  },
+  "archive.invalid_segment": {
+    "en": "invalid segment",
+    "pt-BR": "segmento inválido"
+  },
+  "archive.only_audio_with_errors_and_available_metadata_can_be_requeued": {
+    "en": "only audio with errors and available metadata can be requeued",
+    "pt-BR": "somente áudios com erro e metadados disponíveis podem ser reenfileirados"
+  },
+  "archive.table_not_available_for_inspection": {
+    "en": "table not available for inspection",
+    "pt-BR": "tabela não disponível para consulta"
+  },
+  "archive.empty_or_invalid_transcript": {
+    "en": "empty or invalid transcript",
+    "pt-BR": "transcrição vazia ou inválida"
+  },
+  "archive.use_a_group_identifier_ending_in_g_us": {
+    "en": "use a group identifier ending in @g.us",
+    "pt-BR": "use um identificador de grupo @g.us"
+  },
+  "archive.database_version_is_newer_than_this_program": {
+    "en": "database version is newer than this program",
+    "pt-BR": "versão de banco mais recente que este programa"
+  },
+  "archive.audio_deleted_or_replaced": {
+    "en": "audio deleted or replaced",
+    "pt-BR": "áudio excluído ou substituído"
+  },
+  "archive.update_has_no_message_key": {
+    "en": "update has no message key",
+    "pt-BR": "atualização sem chave da mensagem"
+  },
+  "archive.session_revoked_run_wpp_login_again": {
+    "en": "session revoked; run wpp login again",
+    "pt-BR": "sessão revogada; execute wpp login novamente"
+  },
+  "archive.session_has_no_identifier": {
+    "en": "session has no identifier",
+    "pt-BR": "sessão sem identificador"
+  },
+  "archive.failed_to_save_account_identity": {
+    "en": "failed to save account identity",
+    "pt-BR": "falha ao persistir identidade da conta"
+  },
+  "archive.connection_suspended_by_whatsapp_capture_stopped": {
+    "en": "connection suspended by WhatsApp; capture stopped",
+    "pt-BR": "conexão suspensa pelo WhatsApp; captura encerrada"
+  },
+  "archive.session_connected_in_another_process_capture_stopped": {
+    "en": "session connected in another process; capture stopped",
+    "pt-BR": "sessão conectada em outro processo; captura encerrada"
+  },
+  "archive.authentication_or_connection_failed_check_the_session": {
+    "en": "authentication or connection failed; check the session",
+    "pt-BR": "falha de autenticação/conexão; verifique a sessão"
+  },
+  "archive.incompatible_client_update_the_whatsmeow_dependency": {
+    "en": "incompatible client; update the whatsmeow dependency",
+    "pt-BR": "cliente incompatível; atualize a dependência whatsmeow"
+  },
+  "archive.failed_to_save_identities": {
+    "en": "failed to save identities",
+    "pt-BR": "falha ao persistir identidades"
+  },
+  "archive.failed_to_interpret_message": {
+    "en": "failed to interpret message",
+    "pt-BR": "falha ao interpretar mensagem"
+  },
+  "archive.failed_to_save_message_capture_stopped": {
+    "en": "failed to save message; capture stopped",
+    "pt-BR": "falha ao persistir mensagem; captura encerrada"
+  },
+  "archive.failed_to_save_unavailable_message": {
+    "en": "failed to save unavailable message",
+    "pt-BR": "falha ao persistir mensagem indisponível"
+  },
+  "archive.failed_to_save_history_capture_stopped": {
+    "en": "failed to save history; capture stopped",
+    "pt-BR": "falha ao persistir histórico; captura encerrada"
+  },
+  "archive.failed_to_save_group": {
+    "en": "failed to save group",
+    "pt-BR": "falha ao persistir grupo"
+  },
+  "archive.failed_to_update_group_name": {
+    "en": "failed to update group name",
+    "pt-BR": "falha ao atualizar nome do grupo"
+  },
+  "archive.no_protocol_reference": {
+    "en": "no protocol reference",
+    "pt-BR": "sem referência de protocolo"
+  },
+  "archive.history_request_failed": {
+    "en": "history request failed",
+    "pt-BR": "solicitação de histórico falhou"
+  },
+  "archive.could_not_list_groups": {
+    "en": "could not list groups",
+    "pt-BR": "não foi possível listar grupos"
+  },
+  "archive.audio_exceeds_the_limit": {
+    "en": "audio exceeds the limit",
+    "pt-BR": "áudio excede limite"
+  },
+  "archive.invalid_audio_metadata": {
+    "en": "invalid audio metadata",
+    "pt-BR": "metadados de áudio inválidos"
+  },
+  "archive.audio_exceeds_the_download_limit": {
+    "en": "audio exceeds the download limit",
+    "pt-BR": "áudio excede limite de download"
+  },
+  "archive.audio_download_unavailable": {
+    "en": "audio download unavailable",
+    "pt-BR": "download de áudio indisponível"
+  }
+}

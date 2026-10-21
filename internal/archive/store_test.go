@@ -290,7 +290,7 @@ func TestRecoverOfflineGapThenOlderHistory(t *testing.T) {
 	must(t, syncer.Recover(context.Background(), chats[0], cp[chats[0].ID]))
 	_, m, a, err := s.Snapshot("group@g.us")
 	must(t, err)
-	if len(m) != 4 || source.calls != 3 || a[0].State != "unconfirmed" || !strings.Contains(a[0].Detail, "Sobreposição") {
+	if len(m) != 4 || source.calls != 3 || a[0].State != "unconfirmed" || !strings.Contains(a[0].Detail, "Overlap") {
 		t.Fatalf("recovery: %+v %+v calls=%d", m, a, source.calls)
 	}
 }

@@ -6,13 +6,13 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"io"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+	"wpp/internal/localization"
 )
 
 // AtomicWrite publishes complete bytes without replacing a working export on failure.
@@ -118,7 +118,7 @@ func (e Exporter) ExportContext(ctx context.Context, all bool) error {
 	if err != nil {
 		return err
 	}
-	var failures []string
+	var failures []error
 	for _, c := range chats {
 		if err := ctx.Err(); err != nil {
 			return err
@@ -135,11 +135,11 @@ func (e Exporter) ExportContext(ctx context.Context, all bool) error {
 			if ctx.Err() != nil {
 				return errors.Join(ctx.Err(), err)
 			}
-			failures = append(failures, "exportação falhou para "+c.ID)
+			failures = append(failures, localization.Errorf("archive.export_failed_for_s", c.ID))
 		}
 	}
 	if len(failures) > 0 {
-		return fmt.Errorf("%s", strings.Join(failures, "; "))
+		return errors.Join(failures...)
 	}
 	return nil
 }
@@ -166,7 +166,7 @@ func (e Exporter) ExportChatContext(ctx context.Context, id string) error {
 		var writeErr error
 		c, writeErr = e.Store.writeJSONL(ctx, w, id, "")
 		if writeErr == nil && c.File != file {
-			return errors.New("identidade da conversa mudou durante a exportação; tente novamente")
+			return localization.New("archive.chat_identity_changed_during_export_try_again")
 		}
 		return writeErr
 	}); err != nil {
@@ -179,7 +179,7 @@ func (e Exporter) ExportChatContext(ctx context.Context, id string) error {
 	for _, file := range retired {
 		// Only remove generated filenames, never paths provided by chat names.
 		if !generatedExportName(file) {
-			return fmt.Errorf("nome de exportação inválido")
+			return localization.New("archive.invalid_export_name")
 		}
 		if strings.HasSuffix(file, ".md") {
 			continue
@@ -212,7 +212,7 @@ func (d *Debouncer) TickContext(ctx context.Context, now time.Time) error {
 	if err != nil {
 		return err
 	}
-	var failures []string
+	var failures []error
 	for _, c := range chats {
 		if !c.Tracked && c.Count == 0 {
 			continue
@@ -234,7 +234,7 @@ func (d *Debouncer) TickContext(ctx context.Context, now time.Time) error {
 			if ctx.Err() != nil {
 				return errors.Join(ctx.Err(), err)
 			}
-			failures = append(failures, "exportação falhou para "+c.ID)
+			failures = append(failures, localization.Errorf("archive.export_failed_for_s", c.ID))
 			p.changed = now
 			d.pending[c.ID] = p
 		} else {
@@ -242,7 +242,7 @@ func (d *Debouncer) TickContext(ctx context.Context, now time.Time) error {
 		}
 	}
 	if len(failures) > 0 {
-		return fmt.Errorf("%s", strings.Join(failures, "; "))
+		return errors.Join(failures...)
 	}
 	return nil
 }

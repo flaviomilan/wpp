@@ -35,7 +35,7 @@ func (a *audioCoordinator) setEngine(engine transcription.Engine, cfg transcript
 }
 func (a *audioCoordinator) engineFailed() {
 	a.mu.Lock()
-	a.engineError = "Transcrição indisponível. Confira o modelo e os executáveis em Ajustes."
+	a.engineError = "backend.transcription_unavailable_check_the_model_and_executables_in_settings"
 	a.mu.Unlock()
 }
 func (a *audioCoordinator) engineAvailable() bool {
@@ -67,7 +67,7 @@ func (a *audioCoordinator) prepare(dir string, store *archive.Store) error {
 	a.mu.Lock()
 	a.workspace = workspace
 	if err != nil {
-		a.workspaceError = "Não foi possível preparar a fila. Confira permissões, espaço e processos no diretório de dados."
+		a.workspaceError = "backend.could_not_prepare_the_queue_check_permissions_disk_space_and"
 	}
 	a.mu.Unlock()
 	close(a.workspaceReady)
@@ -92,7 +92,7 @@ func (a *audioCoordinator) run(ctx context.Context, store *archive.Store, t Tran
 	workspace, engine, cfg := a.workspace, a.engine, a.config
 	a.mu.Unlock()
 	if workspace == nil {
-		return invalid("A fila de áudio não está disponível. Confira Ajustes.")
+		return invalid("backend.the_audio_queue_is_unavailable_check_settings")
 	}
 	if engine == nil {
 		return nil
@@ -116,7 +116,7 @@ func (a *audioCoordinator) run(ctx context.Context, store *archive.Store, t Tran
 	_, err := worker.ProcessOne(jobCtx, workspace.Root)
 	if err != nil && !persistenceFailure(err) && !errors.Is(err, context.Canceled) {
 		a.mu.Lock()
-		a.workspaceError = "Falha na área temporária dos áudios. Confira espaço e permissões e reinicie o painel."
+		a.workspaceError = "backend.audio_temporary_storage_failed_check_disk_space_and_permissions_then"
 		a.mu.Unlock()
 	}
 	return errors.Join(err, progressErr)

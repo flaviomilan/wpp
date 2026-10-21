@@ -1,10 +1,10 @@
-# Contribuir com o wpp
+# Contributing to wpp
 
-Obrigado por ajudar a tornar o arquivo local mais útil. A interface e a documentação usam português brasileiro. Antes de propor mudanças de comportamento, descreva o problema e o resultado esperado em uma issue; mudanças pequenas podem seguir diretamente em pull request.
+Help make the local archive useful to more people. Software presentation supports English and Brazilian Portuguese, with English as the default; documentation is maintained in English. Before proposing behavior changes, explain the problem and expected outcome in an issue. Small changes can go directly to a pull request.
 
-## Preparar o ambiente
+## Prepare the environment
 
-Use Go 1.26 (toolchain 1.26.9), compilador C/CGO, Node.js 24+ e npm. Linux e macOS são os alvos; o exemplo systemd é somente Linux. Não use uma sessão ou banco pessoal para desenvolvimento.
+Use Go 1.26 (toolchain 1.26.9), C/CGO, Node.js 24+, and npm. Linux/macOS are the operational targets; the systemd example is Linux-only. Never develop against a personal session or database.
 
 ```bash
 make tools
@@ -15,30 +15,36 @@ npm run test:browser
 python3 -m unittest discover -s scripts -p 'test_*.py'
 ```
 
-`make tools` instala versões fixadas em `.tools/bin`, dependências npm a partir do lockfile e os hooks de publicação deste clone. Se já houver outro `core.hooksPath`, a instalação interrompe para que você integre os hooks existentes. `make check` verifica publicação, formato, lint, diagnósticos, código sem uso, corrida e cobertura. São exigidos ao menos 90% de statements Go e linhas JavaScript, sem funções próprias omitidas; os testes devem comprovar comportamento. Node/npm não são dependências de execução do binário.
+`make tools` installs pinned tools in `.tools/bin`, npm dependencies from the lockfile, and this clone's publication hooks. If another `core.hooksPath` is set, installation stops so existing hooks can be integrated. `make check` covers publication, formatting, lint, diagnostics, dead code, races, and coverage. At least 90% Go statements and JavaScript lines are required, with no untested first-party functions; tests must establish behavior. Node/npm are not binary runtime dependencies.
 
-Para instalar somente as barreiras de publicação, execute `make tools-security hooks`. Use seu endereço `noreply` do GitHub em `git config --local user.email`, sem alterar a configuração global. Execute `make check-security test-security` depois de preparar os arquivos para commit. O índice e todos os commits alcançáveis são examinados; arquivos ainda não preparados não substituem os blobs do índice na verificação. Clones rasos são recusados: execute `git fetch --unshallow` antes de publicar. Substituições de `git replace` não alteram os objetos auditados. Em um pacote extraído sem Git, o check examina somente as fontes do manifesto, e não instala hooks.
+To install only publication barriers, use `make tools-security hooks`. Set your GitHub `noreply` email with `git config --local user.email`, without changing global configuration. Run `make check-security test-security` after staging. Checks inspect staged blobs and all reachable commits; unstaged files do not replace index content. Shallow clones are rejected: run `git fetch --unshallow` before publication. `git replace` does not change audited objects. Without Git, an extracted package checks manifest-listed sources only and does not install hooks.
 
-Os testes padrão usam bancos temporários e transporte/motor fictícios. O harness de navegador serve somente assets e intercepta todas as APIs; não abra a conta real para gerar screenshots. Confira [Qualidade](docs/qualidade.md) e [Arquitetura](docs/arquitetura.md).
+Standard tests use temporary databases and fake transports/engines. The browser harness serves assets and intercepts APIs; never open a real account to generate screenshots. See [Quality](docs/quality.md) and [Architecture](docs/architecture.md).
 
-## Enviar uma mudança
+## Submit a change
 
-- Mantenha a alteração focada, preserve contratos CLI/HTTP e explique mudanças de comportamento.
-- Inclua testes pertinentes e atualize os guias quando comandos, telas ou garantias mudarem.
-- Informe problema, resultado e comandos de validação no modelo de PR. Não declare testes não executados como aprovados.
-- Nunca anexe bancos, sessões, QR, mensagens, descritores de mídia, tokens ou exports reais. Use IDs e conteúdo fictícios.
-- Não reduza gates de qualidade para fazer um check passar. Se depende de conta real ou de outra plataforma, indique a limitação.
+- Keep changes focused, preserve CLI/HTTP contracts, and explain behavior changes.
+- Include relevant tests and update guides when commands, screens, or guarantees change.
+- Describe the problem, outcome, and actual validation commands in the PR template. Never claim unrun checks passed.
+- Never attach real databases, sessions, QR codes, messages, media descriptors, tokens, or exports. Use fictitious IDs/content.
+- Do not weaken quality gates to make checks pass. State limitations involving real accounts or another platform.
 
-Todo novo arquivo versionado deve ser revisado e incluído em `release-files.txt`. Essa lista permite fontes públicas; ela não autoriza dados reais. O validador continua bloqueando tipos e diretórios operacionais, mesmo que sejam incluídos no manifesto ou adicionados com `git add -f`. Textos têm limite de 1 MiB; binários, links e submódulos são recusados, exceto as capturas PNG aprovadas por caminho e SHA-256 em `publication-policy.json`.
+Every new tracked file must be reviewed and listed in `release-files.txt`. That positive list permits public source, not real data. The validator still blocks operational types/directories even if listed or force-added. Text has a 1 MiB limit. Binaries, symlinks, and submodules are rejected, except screenshots approved by path and SHA-256 in `publication-policy.json`.
 
-Para alterar capturas, use exclusivamente o harness fictício de navegador. Os testes gravam imagens em `test-results/`, sem substituir as capturas aprovadas em `docs/images/`. Inspecione a imagem inteira e seus metadados, copie somente a captura revisada para a documentação e só então atualize seu hash na política. O exemplo JSONL sintético também exige revisão e hash exato; seus textos continuam passando pelo scanner. Nunca aprove uma imagem de uma sessão real. Revise mudanças no manifesto, política, hooks e workflow com o mesmo cuidado que código de segurança. Não use exceções por diretório, baselines de achados ou comentários de supressão para liberar segredos.
+Use only the synthetic browser harness for screenshots. Tests write `test-results/`, leaving approved `docs/images/` assets untouched. Inspect the complete image and metadata, copy only the reviewed result, then update its policy hash. The synthetic JSONL example also needs review and an exact hash, and its text still passes scanning. Never approve real-session imagery. Review manifests, policy, hooks, and workflows as carefully as security code. Never use directory exceptions, findings baselines, or suppression comments to release secrets.
 
-Hooks locais podem ser desativados; não representam uma barreira no servidor Git. A CI verifica depois do envio. Confira [Segurança](SECURITY.md) para os limites e o procedimento de incidente.
+Local hooks can be disabled and are not a Git server barrier. CI checks after upload. See [Security](SECURITY.md) for limits and incident handling.
 
-## Licença, autoria e contato
+## Translation catalogs
 
-O repositório de destino é [flaviomilan/wpp](https://github.com/flaviomilan/wpp), mantido por [Flávio Milan (@flaviomilan)](https://github.com/flaviomilan). As contribuições ao código próprio seguem a [licença MIT](LICENSE), preservando avisos de copyright/licença e a atribuição dos autores. Não acrescente restrições de uso comercial nem exigência de crédito visual obrigatório à MIT.
+Use stable message identifiers in embedded English and Brazilian Portuguese catalogs. Keep named placeholders identical; tests verify keys, placeholders, count variants, and English fallback. Catalog messages use plain-text rendering. Never use source prose as an ID, translate stored messages/transcripts, or expose internal error causes.
 
-Dependências não são relicenciadas: consulte [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), inclusive as condições GPL v3 do executável combinado com libsignal. Ferramentas e modelos baixados não entram no pacote de fontes.
+Go catalogs live in `internal/localization`; browser catalogs are embedded in `internal/webui/assets/messages.mjs`. Update both for shared public message IDs and run parity tests. The `application_language` preference is independent of processing `language`, which selects audio recognition. Preference reads must not create a default row; writes must not overwrite capture/audio settings or require capture ownership. Language switches must preserve reading, focus, and drafts.
 
-Use [Issues](https://github.com/flaviomilan/wpp/issues) para problemas comuns. Para vulnerabilidades, siga [SECURITY.md](SECURITY.md); para moderação, [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). Os canais usam recursos do GitHub; nenhum e-mail pessoal é obrigatório. A ativação e a conferência dos recursos remotos fazem parte do [checklist de publicação](docs/lancamento.md).
+## License, authorship, and contact
+
+The target repository is [flaviomilan/wpp](https://github.com/flaviomilan/wpp), maintained by [Flávio Milan (@flaviomilan)](https://github.com/flaviomilan). First-party contributions follow the [MIT license](LICENSE), preserving notices and author attribution. Do not add commercial-use restrictions or mandatory visual credits to MIT.
+
+Dependencies are not relicensed; see [third-party notices](THIRD_PARTY_NOTICES.md), including GPL v3 requirements for a combined executable incorporating libsignal. Downloaded tools/models are excluded from the source package.
+
+Use [Issues](https://github.com/flaviomilan/wpp/issues) for ordinary problems, [SECURITY.md](SECURITY.md) for vulnerabilities, and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for moderation. Channels use GitHub features without a mandatory public personal email. Remote activation/verification belongs to the [publication checklist](docs/release.md).

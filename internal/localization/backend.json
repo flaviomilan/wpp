@@ -1,0 +1,450 @@
+{
+  "backend.whatsapp_refused_the_connection": {
+    "en": "WhatsApp refused the connection.",
+    "pt-BR": "A conexão foi recusada pelo WhatsApp."
+  },
+  "backend.the_connection_was_refused_link_your_account_again": {
+    "en": "The connection was refused. Link your account again.",
+    "pt-BR": "A conexão foi recusada. Conecte novamente a conta."
+  },
+  "backend.the_operation_failed_check_the_connection_and_settings_then_try": {
+    "en": "The operation failed. Check the connection and settings, then try again.",
+    "pt-BR": "A execução falhou. Confira a conexão, os ajustes e tente novamente."
+  },
+  "backend.export_failed_messages_remain_saved_in_sqlite": {
+    "en": "Export failed. Messages remain saved in SQLite.",
+    "pt-BR": "A exportação falhou. As mensagens continuam salvas no SQLite."
+  },
+  "backend.the_operation_queue_is_full_wait_for_an_operation_to": {
+    "en": "The operation queue is full. Wait for an operation to finish and try again.",
+    "pt-BR": "A fila de operações está cheia. Aguarde uma execução terminar e tente novamente."
+  },
+  "backend.the_work_queue_is_full_wait_and_try_again": {
+    "en": "The work queue is full. Wait and try again.",
+    "pt-BR": "A fila de trabalho está cheia. Aguarde e tente novamente."
+  },
+  "backend.the_audio_queue_is_unavailable_check_settings": {
+    "en": "The audio queue is unavailable. Check Settings.",
+    "pt-BR": "A fila de áudio não está disponível. Confira Ajustes."
+  },
+  "backend.the_operation_has_finished_or_does_not_exist": {
+    "en": "The operation has finished or does not exist.",
+    "pt-BR": "A operação já terminou ou não existe."
+  },
+  "backend.transcription_did_not_complete_check_the_error_on_the_audio": {
+    "en": "Transcription did not complete. Check the error on the audio card.",
+    "pt-BR": "A tentativa não concluiu a transcrição. Confira o erro no cartão do áudio."
+  },
+  "backend.track_the_chat_before_processing_this_audio": {
+    "en": "Track the chat before processing this audio.",
+    "pt-BR": "Acompanhe a conversa antes de processar este áudio."
+  },
+  "backend.waiting_to_run": {
+    "en": "Waiting to run.",
+    "pt-BR": "Aguardando execução."
+  },
+  "backend.waiting_for_the_current_audio_to_finish": {
+    "en": "Waiting for the current audio to finish.",
+    "pt-BR": "Aguardando o áudio em andamento terminar."
+  },
+  "backend.retrieving_history_available_on_the_phone": {
+    "en": "Retrieving history available on the phone.",
+    "pt-BR": "Buscando o histórico disponível no celular."
+  },
+  "backend.cancelling_the_operation_preserving_received_data": {
+    "en": "Cancelling the operation; preserving received data.",
+    "pt-BR": "Cancelando execução; preservando os dados recebidos."
+  },
+  "backend.connecting_to_process_only_this_audio": {
+    "en": "Connecting to process only this audio.",
+    "pt-BR": "Conectando para processar somente este áudio."
+  },
+  "backend.link_your_account_using_the_qr_code_to_continue": {
+    "en": "Link your account using the QR code to continue.",
+    "pt-BR": "Conecte a conta pelo QR code para continuar."
+  },
+  "backend.link_your_account_again_to_continue": {
+    "en": "Link your account again to continue.",
+    "pt-BR": "Conecte novamente a conta para continuar."
+  },
+  "backend.whatsapp_disconnected_try_connecting_again": {
+    "en": "WhatsApp disconnected. Try connecting again.",
+    "pt-BR": "Conexão interrompida pelo WhatsApp. Tente conectar novamente."
+  },
+  "backend.check_the_connection_and_storage_before_continuing": {
+    "en": "Check the connection and storage before continuing.",
+    "pt-BR": "Confira a conexão e o armazenamento antes de continuar."
+  },
+  "backend.check_language_threads_0_to_256_and_vocabulary_up_to": {
+    "en": "Check language, threads (0 to 256), and vocabulary (up to 2048 bytes).",
+    "pt-BR": "Confira idioma, threads (0 a 256) e vocabulário (até 2048 bytes)."
+  },
+  "backend.account_connected_and_chats_updated": {
+    "en": "Account connected and chats updated.",
+    "pt-BR": "Conta conectada e conversas atualizadas."
+  },
+  "backend.account_connected_updating_chats": {
+    "en": "Account connected. Updating chats.",
+    "pt-BR": "Conta conectada. Atualizando conversas."
+  },
+  "backend.account_connected_some_chats_have_not_been_updated_yet": {
+    "en": "Account connected; some chats have not been updated yet.",
+    "pt-BR": "Conta conectada; algumas conversas ainda não foram atualizadas."
+  },
+  "backend.operation_cancelled_received_data_was_preserved": {
+    "en": "Operation cancelled. Received data was preserved.",
+    "pt-BR": "Execução cancelada. Dados recebidos foram preservados."
+  },
+  "backend.operation_completed_history_coverage_remains_unconfirmed": {
+    "en": "Operation completed; history coverage remains unconfirmed.",
+    "pt-BR": "Execução concluída; cobertura do histórico não confirmada."
+  },
+  "backend.operation_finished_with_outstanding_items_check_history_and_the_audio": {
+    "en": "Operation finished with outstanding items; check history and the audio queue.",
+    "pt-BR": "Execução encerrada com pendências; confira o histórico e a fila de áudios."
+  },
+  "backend.failed_to_close_the_connection": {
+    "en": "Failed to close the connection.",
+    "pt-BR": "Falha ao encerrar a conexão."
+  },
+  "backend.jsonl_export_failed_check_the_export_directory_and_try_export": {
+    "en": "JSONL export failed. Check the export directory and try Export all in Settings.",
+    "pt-BR": "Falha ao exportar JSONL. Confira o diretório de exportação e tente Exportar todas em Ajustes."
+  },
+  "backend.failed_to_save_the_operation_check_storage": {
+    "en": "Failed to save the operation. Check storage.",
+    "pt-BR": "Falha ao persistir a operação. Confira o armazenamento."
+  },
+  "backend.storage_failure_check_disk_space_and_permissions_before_resuming_capture": {
+    "en": "Storage failure. Check disk space and permissions before resuming capture.",
+    "pt-BR": "Falha de armazenamento. Confira espaço e permissões antes de retomar a captura."
+  },
+  "backend.storage_failure_check_disk_space_and_permissions_before_resuming": {
+    "en": "Storage failure. Check disk space and permissions before resuming.",
+    "pt-BR": "Falha de armazenamento. Confira espaço e permissões antes de retomar."
+  },
+  "backend.audio_temporary_storage_failed_check_disk_space_and_permissions_then": {
+    "en": "Audio temporary storage failed. Check disk space and permissions, then restart the panel.",
+    "pt-BR": "Falha na área temporária dos áudios. Confira espaço e permissões e reinicie o painel."
+  },
+  "backend.invalid_chat_identifier": {
+    "en": "Invalid chat identifier.",
+    "pt-BR": "Identificador de conversa inválido."
+  },
+  "backend.invalid_identifier": {
+    "en": "Invalid identifier.",
+    "pt-BR": "Identificador inválido."
+  },
+  "backend.enter_a_positive_time_limit_such_as_30m": {
+    "en": "Enter a positive time limit, such as 30m.",
+    "pt-BR": "Informe um tempo limite positivo, como 30m."
+  },
+  "backend.message_deleted_or_replaced": {
+    "en": "Message deleted or replaced.",
+    "pt-BR": "Mensagem excluída ou substituída."
+  },
+  "backend.could_not_open_the_local_session": {
+    "en": "Could not open the local session.",
+    "pt-BR": "Não foi possível abrir a sessão local."
+  },
+  "backend.could_not_update_all_chats_try_again": {
+    "en": "Could not update all chats. Try again.",
+    "pt-BR": "Não foi possível atualizar todas as conversas. Tente novamente."
+  },
+  "backend.could_not_connect_to_whatsapp": {
+    "en": "Could not connect to WhatsApp.",
+    "pt-BR": "Não foi possível conectar ao WhatsApp."
+  },
+  "backend.could_not_start_pairing": {
+    "en": "Could not start pairing.",
+    "pt-BR": "Não foi possível iniciar o pareamento."
+  },
+  "backend.could_not_prepare_the_queue_check_permissions_disk_space_and": {
+    "en": "Could not prepare the queue. Check permissions, disk space, and processes using the data directory.",
+    "pt-BR": "Não foi possível preparar a fila. Confira permissões, espaço e processos no diretório de dados."
+  },
+  "backend.could_not_prepare_the_qr_code": {
+    "en": "Could not prepare the QR code.",
+    "pt-BR": "Não foi possível preparar o QR code."
+  },
+  "backend.could_not_validate_settings_check_executables_model_language_and_limits": {
+    "en": "Could not validate settings. Check executables, model, language, and limits.",
+    "pt-BR": "Não foi possível validar os ajustes. Confira executáveis, modelo, idioma e limites."
+  },
+  "backend.whatsapp_did_not_respond_try_connecting_again": {
+    "en": "WhatsApp did not respond. Try connecting again.",
+    "pt-BR": "O WhatsApp não respondeu. Tente conectar novamente."
+  },
+  "backend.the_panel_is_shutting_down": {
+    "en": "The panel is shutting down.",
+    "pt-BR": "O painel está encerrando."
+  },
+  "backend.the_audio_is_waiting_for_processing": {
+    "en": "The audio is waiting for processing.",
+    "pt-BR": "O áudio está aguardando processamento."
+  },
+  "backend.the_audio_is_already_being_processed": {
+    "en": "The audio is already being processed.",
+    "pt-BR": "O áudio já está em processamento."
+  },
+  "backend.preparing_the_operation": {
+    "en": "Preparing the operation.",
+    "pt-BR": "Preparando execução."
+  },
+  "backend.processing_the_selected_audio": {
+    "en": "Processing the selected audio.",
+    "pt-BR": "Processando o áudio selecionado."
+  },
+  "backend.processing_audio_completed_of_total": {
+    "en": "Processing audio: {completed} of {total}.",
+    "pt-BR": "Processando áudios: {completed} de {total}."
+  },
+  "backend.qr_code_expired_request_another_to_continue": {
+    "en": "QR code expired. Request another to continue.",
+    "pt-BR": "QR code expirado. Solicite outro para continuar."
+  },
+  "backend.session_revoked_link_again_using_the_qr_code": {
+    "en": "Session revoked. Link again using the QR code.",
+    "pt-BR": "Sessão revogada. Conecte novamente pelo QR code."
+  },
+  "backend.sync_the_chat_to_try_retrieving_audio_metadata": {
+    "en": "Sync the chat to try retrieving audio metadata.",
+    "pt-BR": "Sincronize a conversa para tentar recuperar os metadados do áudio."
+  },
+  "backend.transcription_completed": {
+    "en": "Transcription completed.",
+    "pt-BR": "Transcrição concluída."
+  },
+  "backend.transcription_completed_read_the_text_in_the_audio_queue": {
+    "en": "Transcription completed. Read the text in the audio queue.",
+    "pt-BR": "Transcrição concluída. Confira o texto na fila de áudios."
+  },
+  "backend.transcription_unavailable_check_the_model_and_executables_in_settings": {
+    "en": "Transcription unavailable. Check the model and executables in Settings.",
+    "pt-BR": "Transcrição indisponível. Confira o modelo e os executáveis em Ajustes."
+  },
+  "backend.validating_the_transcription_engine_and_model": {
+    "en": "Validating the transcription engine and model.",
+    "pt-BR": "Validando o motor e o modelo de transcrição."
+  },
+  "backend.another_capture_process_controls_this_directory_stop_it_and_reopen": {
+    "en": "another capture process controls this directory; stop it and reopen the panel to take control",
+    "pt-BR": "outra captura controla este diretório; encerre-a e reabra o painel para assumir o controle"
+  },
+  "backend.audio_requeued_enable_automatic_transcription_and_request_this_audio_again": {
+    "en": "Audio requeued. Enable Automatic transcription and request this audio again.",
+    "pt-BR": "Áudio reenfileirado. Ative Transcrição automática e solicite novamente este áudio."
+  },
+  "backend.audio_requeued_check_the_engine_enable_automatic_transcription_and_try": {
+    "en": "Audio requeued. Check the engine, enable Automatic transcription, and try again.",
+    "pt-BR": "Áudio reenfileirado. Confira o motor, ative Transcrição automática e tente novamente."
+  },
+  "backend.the_request_must_contain_a_single_object": {
+    "en": "The request must contain a single object.",
+    "pt-BR": "A solicitação deve conter um único objeto."
+  },
+  "backend.failed_to_read_settings": {
+    "en": "Failed to read settings.",
+    "pt-BR": "Falha ao consultar ajustes."
+  },
+  "backend.storage_failure_check_the_service_status": {
+    "en": "Storage failure. Check the service status.",
+    "pt-BR": "Falha de armazenamento. Confira o estado do serviço."
+  },
+  "backend.set_enabled_to_true_or_false": {
+    "en": "Set enabled to true or false.",
+    "pt-BR": "Informe enabled como true ou false."
+  },
+  "backend.set_tracked_to_true_or_false": {
+    "en": "Set tracked to true or false.",
+    "pt-BR": "Informe tracked como true ou false."
+  },
+  "backend.could_not_read_the_service_status": {
+    "en": "Could not read the service status.",
+    "pt-BR": "Não foi possível consultar o serviço."
+  },
+  "backend.could_not_perform_the_operation_check_the_service_status": {
+    "en": "Could not perform the operation. Check the service status.",
+    "pt-BR": "Não foi possível executar a operação. Confira o estado do serviço."
+  },
+  "backend.the_panel_is_in_consultation_mode": {
+    "en": "The panel is in consultation mode.",
+    "pt-BR": "O painel está em modo de consulta."
+  },
+  "backend.qr_code_unavailable_or_expired": {
+    "en": "QR code unavailable or expired.",
+    "pt-BR": "QR code indisponível ou expirado."
+  },
+  "backend.record_not_found_in_the_archive": {
+    "en": "Record not found in the archive.",
+    "pt-BR": "Registro não encontrado no arquivo."
+  },
+  "backend.invalid_request_check_the_fields": {
+    "en": "Invalid request. Check the fields.",
+    "pt-BR": "Solicitação inválida. Confira os campos."
+  },
+  "backend.the_interface_accepts_only_a_loopback_ip_address_such_as": {
+    "en": "the interface accepts only a loopback IP address, such as 127.0.0.1:8080",
+    "pt-BR": "a interface aceita apenas endereço IP de loopback, como 127.0.0.1:8080"
+  },
+  "backend.invalid_person_registration_json": {
+    "en": "invalid person registration JSON",
+    "pt-BR": "cadastro JSON inválido"
+  },
+  "backend.registration_must_contain_a_single_object": {
+    "en": "registration must contain a single object",
+    "pt-BR": "cadastro deve conter um único objeto"
+  },
+  "backend.invalid_address_use_127_0_0_1_8080": {
+    "en": "invalid address; use 127.0.0.1:8080",
+    "pt-BR": "endereço inválido; use 127.0.0.1:8080"
+  },
+  "backend.invalid_host": {
+    "en": "invalid host",
+    "pt-BR": "host inválido"
+  },
+  "backend.invalid_limit": {
+    "en": "invalid limit",
+    "pt-BR": "limit inválido"
+  },
+  "backend.invalid_offset": {
+    "en": "invalid offset",
+    "pt-BR": "offset inválido"
+  },
+  "backend.invalid_mutation_origin": {
+    "en": "invalid mutation origin",
+    "pt-BR": "origem da alteração inválida"
+  },
+  "backend.invalid_pagination": {
+    "en": "invalid pagination",
+    "pt-BR": "paginação inválida"
+  },
+  "backend.audio_requeued_the_external_controller_will_process_it_when_enabled": {
+    "en": "Audio requeued; the external controller will process it when enabled.",
+    "pt-BR": "Áudio reenfileirado; o controlador externo realizará o processamento quando estiver habilitado."
+  },
+  "backend.invalid_whisper_json": {
+    "en": "invalid Whisper JSON",
+    "pt-BR": "JSON Whisper inválido"
+  },
+  "backend.whisper_json_is_not_utf_8": {
+    "en": "Whisper JSON is not UTF-8",
+    "pt-BR": "JSON Whisper não é UTF-8"
+  },
+  "backend.invalid_file": {
+    "en": "invalid file",
+    "pt-BR": "arquivo inválido"
+  },
+  "backend.audio_conversion_failed": {
+    "en": "audio conversion failed",
+    "pt-BR": "conversão de áudio falhou"
+  },
+  "backend.invalid_audio_temporary_directory": {
+    "en": "invalid audio temporary directory",
+    "pt-BR": "diretório temporário de áudio inválido"
+  },
+  "backend.download_unavailable_or_interrupted": {
+    "en": "download unavailable or interrupted",
+    "pt-BR": "download indisponível ou interrompido"
+  },
+  "backend.speech_not_recognized_or_text_exceeds_the_limit": {
+    "en": "speech not recognized or text exceeds the limit",
+    "pt-BR": "fala não reconhecida ou texto acima do limite"
+  },
+  "backend.failed_to_clean_up_temporary_audio": {
+    "en": "failed to clean up temporary audio",
+    "pt-BR": "falha ao limpar áudio temporário"
+  },
+  "backend.failed_to_save_processing_phase": {
+    "en": "failed to save processing phase",
+    "pt-BR": "falha ao persistir etapa"
+  },
+  "backend.failed_to_save_transcription": {
+    "en": "failed to save transcription",
+    "pt-BR": "falha ao persistir transcrição"
+  },
+  "backend.failed_to_prepare_temporary_directory": {
+    "en": "failed to prepare temporary directory",
+    "pt-BR": "falha ao preparar diretório temporário"
+  },
+  "backend.ffmpeg_not_found": {
+    "en": "ffmpeg not found",
+    "pt-BR": "ffmpeg não encontrado"
+  },
+  "backend.language_not_identified": {
+    "en": "language not identified",
+    "pt-BR": "idioma não identificado"
+  },
+  "backend.unsupported_audio_language_use_pt_en_es_or_auto": {
+    "en": "unsupported audio language; use pt, en, es, or auto",
+    "pt-BR": "idioma não suportado; use pt, en, es ou auto"
+  },
+  "backend.invalid_whisper_model": {
+    "en": "invalid Whisper model",
+    "pt-BR": "modelo Whisper inválido"
+  },
+  "backend.whisper_model_not_found_configure_whisper_model": {
+    "en": "Whisper model not found; configure --whisper-model",
+    "pt-BR": "modelo Whisper não encontrado; configure --whisper-model"
+  },
+  "backend.whisper_engine_failed": {
+    "en": "Whisper engine failed",
+    "pt-BR": "motor Whisper falhou"
+  },
+  "backend.whisper_engine_did_not_produce_json": {
+    "en": "Whisper engine did not produce JSON",
+    "pt-BR": "motor Whisper não produziu JSON"
+  },
+  "backend.could_not_run_whisper_cli_version": {
+    "en": "could not run whisper-cli --version",
+    "pt-BR": "não foi possível executar whisper-cli --version"
+  },
+  "backend.whisper_output_exceeds_the_limit": {
+    "en": "Whisper output exceeds the limit",
+    "pt-BR": "saída Whisper excede limite"
+  },
+  "backend.invalid_timestamps": {
+    "en": "invalid timestamps",
+    "pt-BR": "tempos inválidos"
+  },
+  "backend.threads_must_be_between_1_and_256": {
+    "en": "threads must be between 1 and 256",
+    "pt-BR": "threads deve ficar entre 1 e 256"
+  },
+  "backend.transcription_timeout_must_be_positive": {
+    "en": "transcription timeout must be positive",
+    "pt-BR": "timeout da transcrição deve ser positivo"
+  },
+  "backend.unexpected_translation": {
+    "en": "unexpected translation",
+    "pt-BR": "tradução inesperada"
+  },
+  "backend.transcription_failed_timed_out_or_did_not_recognize_speech": {
+    "en": "transcription failed, timed out, or did not recognize speech",
+    "pt-BR": "transcrição falhou, expirou ou não reconheceu fala"
+  },
+  "backend.transcription_interrupted": {
+    "en": "transcription interrupted",
+    "pt-BR": "transcrição interrompida"
+  },
+  "backend.use_a_multilingual_model_for_this_language": {
+    "en": "use a multilingual model for this language",
+    "pt-BR": "use um modelo multilíngue para este idioma"
+  },
+  "backend.transcription_vocabulary_exceeds_2048_bytes": {
+    "en": "transcription vocabulary exceeds 2048 bytes",
+    "pt-BR": "vocabulário da transcrição excede 2048 bytes"
+  },
+  "backend.whisper_cli_not_found_configure_whisper_bin": {
+    "en": "whisper-cli not found; configure --whisper-bin",
+    "pt-BR": "whisper-cli não encontrado; configure --whisper-bin"
+  },
+  "backend.converted_audio_exceeds_256_mib": {
+    "en": "converted audio exceeds 256 MiB",
+    "pt-BR": "áudio convertido excede 256 MiB"
+  },
+  "backend.invalid_audio_or_larger_than_64_mib": {
+    "en": "invalid audio or larger than 64 MiB",
+    "pt-BR": "áudio inválido ou acima de 64 MiB"
+  }
+}

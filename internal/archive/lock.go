@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"syscall"
+	"wpp/internal/localization"
 )
 
 // Lock is held by the kernel, so a killed process cannot leave a stale lock.
@@ -24,7 +25,7 @@ func lockFile(dir, name string) (func(), error) {
 		return nil, err
 	}
 	if err = syscall.Flock(int(f.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
-		return nil, errors.Join(errors.New("outro processo está usando este diretório de dados"), f.Close())
+		return nil, errors.Join(localization.New("archive.another_process_is_using_this_data_directory"), f.Close())
 	}
 	// Closing the descriptor releases its kernel lock. The callback cannot report errors.
 	return func() { _ = f.Close() }, nil

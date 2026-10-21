@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"wpp/internal/archive"
+	"wpp/internal/localization"
 	"wpp/internal/service"
 )
 
@@ -12,10 +13,10 @@ func decode(w http.ResponseWriter, r *http.Request, value any) error {
 	d := json.NewDecoder(http.MaxBytesReader(w, r.Body, 16384))
 	d.DisallowUnknownFields()
 	if e := d.Decode(value); e != nil {
-		return &archive.ValidationError{Message: "Solicitação inválida. Confira os campos."}
+		return &archive.ValidationError{Message: localization.Text(localization.English, "backend.invalid_request_check_the_fields", nil), Code: "backend.invalid_request_check_the_fields"}
 	}
 	if e := d.Decode(new(any)); e != io.EOF {
-		return &archive.ValidationError{Message: "A solicitação deve conter um único objeto."}
+		return &archive.ValidationError{Message: localization.Text(localization.English, "backend.the_request_must_contain_a_single_object", nil), Code: "backend.the_request_must_contain_a_single_object"}
 	}
 	return nil
 }
@@ -27,14 +28,14 @@ func (s *Server) controls(mux *http.ServeMux) {
 		}
 		state, e := s.control.Snapshot()
 		if e != nil {
-			problem(w, 500, "Não foi possível consultar o serviço.")
+			problemMessage(w, 500, "backend.could_not_read_the_service_status")
 			return
 		}
 		respond(w, state)
 	})
 	gate := func(w http.ResponseWriter) bool {
 		if s.control == nil {
-			problem(w, 409, "O painel está em modo de consulta.")
+			problemMessage(w, 409, "backend.the_panel_is_in_consultation_mode")
 			return false
 		}
 		return true
@@ -62,7 +63,7 @@ func (s *Server) controls(mux *http.ServeMux) {
 		}
 		raw := s.control.QR()
 		if len(raw) == 0 {
-			problem(w, 404, "QR code indisponível ou expirado.")
+			problemMessage(w, 404, "backend.qr_code_unavailable_or_expired")
 			return
 		}
 		w.Header().Set("Content-Type", "image/png")
@@ -82,7 +83,7 @@ func (s *Server) controls(mux *http.ServeMux) {
 			Tracked *bool `json:"tracked"`
 		}
 		if e := decode(w, r, &body); e != nil || body.Tracked == nil {
-			problem(w, 400, "Informe tracked como true ou false.")
+			problemMessage(w, 400, "backend.set_tracked_to_true_or_false")
 			return
 		}
 		if e := s.control.Track(r.PathValue("chat"), *body.Tracked); e != nil {
@@ -100,7 +101,7 @@ func (s *Server) controls(mux *http.ServeMux) {
 				Enabled *bool `json:"enabled"`
 			}
 			if e := decode(w, r, &body); e != nil || body.Enabled == nil {
-				problem(w, 400, "Informe enabled como true ou false.")
+				problemMessage(w, 400, "backend.set_enabled_to_true_or_false")
 				return
 			}
 			var e error
@@ -143,7 +144,7 @@ func (s *Server) controls(mux *http.ServeMux) {
 		}
 		state, e := s.control.Snapshot()
 		if e != nil {
-			problem(w, 500, "Falha ao consultar ajustes.")
+			problemMessage(w, 500, "backend.failed_to_read_settings")
 			return
 		}
 		respond(w, state.Settings)

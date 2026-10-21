@@ -3,8 +3,8 @@ package archive
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
+	"wpp/internal/localization"
 )
 
 type HistorySource interface {
@@ -12,12 +12,16 @@ type HistorySource interface {
 }
 type HistoryError struct{ Err error }
 
-func (e *HistoryError) Error() string { return "histórico sem confirmação" }
+func (e *HistoryError) Error() string {
+	return localization.Text(localization.English, "archive.history_unconfirmed", nil)
+}
 func (e *HistoryError) Unwrap() error { return e.Err }
 
 type PersistenceError struct{ Err error }
 
-func (e *PersistenceError) Error() string { return "falha de persistência na recuperação" }
+func (e *PersistenceError) Error() string {
+	return localization.Text(localization.English, "archive.recovery_persistence_failure", nil)
+}
 func (e *PersistenceError) Unwrap() error { return e.Err }
 
 type Synchronizer struct {
@@ -30,11 +34,11 @@ type Synchronizer struct {
 // then the oldest persisted message to extend the archive. It never interprets
 // overlap or an empty response as proof that the transcript is complete.
 func (s Synchronizer) Recover(ctx context.Context, chat Chat, checkpoint *Message) (err error) {
-	attempt, err := s.Store.BeginRecovery(chat.ID, checkpoint, "Recebendo pendências e solicitando histórico ao celular.")
+	attempt, err := s.Store.BeginRecovery(chat.ID, checkpoint, "history.receiving")
 	if err != nil {
 		return err
 	}
-	detail := "Execução interrompida; recuperação não confirmada."
+	detail := "history.interrupted"
 	defer func() {
 		if e := s.Store.FinishAttempt(attempt, detail); e != nil {
 			err = errors.Join(err, &PersistenceError{Err: e})
@@ -55,7 +59,7 @@ func (s Synchronizer) Recover(ctx context.Context, chat Chat, checkpoint *Messag
 		}
 	}
 	if chat.Seed == nil {
-		detail = "Sem mensagem de referência; aguardando histórico ou uma nova mensagem para tentar novamente."
+		detail = "history.no_reference"
 		return nil
 	}
 	current := *chat.Seed
@@ -92,9 +96,9 @@ func (s Synchronizer) Recover(ctx context.Context, chat Chat, checkpoint *Messag
 	for {
 		batch, e := s.Source.History(ctx, current)
 		if e != nil {
-			detail = "Histórico sem resposta ou com erro; recuperação não confirmada."
+			detail = "history.unavailable"
 			if ctx.Err() != nil {
-				detail = "Execução interrompida; recuperação não confirmada."
+				detail = "history.interrupted"
 			}
 			return &HistoryError{Err: e}
 		}
@@ -110,7 +114,7 @@ func (s Synchronizer) Recover(ctx context.Context, chat Chat, checkpoint *Messag
 			}
 		}
 		if oldest == nil || seen[anchor(oldest.ID, keySender(*oldest), oldest.FromMe)] {
-			detail = "Celular não retornou mensagens anteriores; histórico integral não confirmado."
+			detail = "history.no_earlier_messages"
 			break
 		}
 		current = *oldest
@@ -119,7 +123,7 @@ func (s Synchronizer) Recover(ctx context.Context, chat Chat, checkpoint *Messag
 			if e = s.Store.ObserveBoundary(attempt); e != nil {
 				return e
 			}
-			detail = "Sobreposição com a referência anterior observada; ausência de lacunas não comprovada."
+			detail = "history.overlap"
 			break
 		}
 		if e = pause(ctx, s.Delay); e != nil {
@@ -145,7 +149,7 @@ func (s Synchronizer) Recover(ctx context.Context, chat Chat, checkpoint *Messag
 			for {
 				batch, e := s.Source.History(ctx, current)
 				if e != nil {
-					detail = "Sobreposição observada; expansão do histórico antigo sem confirmação."
+					detail = "history.expansion"
 					return &HistoryError{Err: e}
 				}
 				if _, e = s.Store.Ingest(batch); e != nil {
@@ -260,7 +264,7 @@ func (s Synchronizer) All(ctx context.Context, checkpoints map[string]*Message, 
 			if errors.As(err, &persistence) || !errors.As(err, &history) {
 				return err
 			}
-			onError(fmt.Errorf("recuperação não confirmada para %s", c.ID))
+			onError(localization.Errorf("archive.recovery_unconfirmed_for_s", c.ID))
 			if ctx.Err() != nil {
 				return ctx.Err()
 			}
@@ -268,3 +272,6 @@ func (s Synchronizer) All(ctx context.Context, checkpoints map[string]*Message, 
 	}
 	return nil
 }
+
+func (e *HistoryError) MessageCode() string     { return "archive.history_unconfirmed" }
+func (e *PersistenceError) MessageCode() string { return "archive.recovery_persistence_failure" }

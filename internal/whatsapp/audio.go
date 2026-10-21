@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"wpp/internal/archive"
+	"wpp/internal/localization"
 )
 
 const maxAudioBytes = 64 * 1024 * 1024
@@ -18,13 +19,13 @@ type limitedAudioFile struct{ *os.File }
 
 func (f limitedAudioFile) Truncate(n int64) error {
 	if n < 0 || n > maxAudioBytes+64 {
-		return errors.New("áudio excede limite")
+		return localization.New("archive.audio_exceeds_the_limit")
 	}
 	return f.File.Truncate(n)
 }
 func (f limitedAudioFile) WriteAt(p []byte, n int64) (int, error) {
 	if n < 0 || n+int64(len(p)) > maxAudioBytes+64 {
-		return 0, errors.New("áudio excede limite")
+		return 0, localization.New("archive.audio_exceeds_the_limit")
 	}
 	return f.File.WriteAt(p, n)
 }
@@ -34,17 +35,17 @@ func (f limitedAudioFile) Write(p []byte) (int, error) {
 		return 0, e
 	}
 	if n+int64(len(p)) > maxAudioBytes+64 {
-		return 0, errors.New("áudio excede limite")
+		return 0, localization.New("archive.audio_exceeds_the_limit")
 	}
 	return f.File.Write(p)
 }
 func (c *Client) DownloadAudio(ctx context.Context, metadata []byte, path string) (result error) {
 	var msg waE2E.AudioMessage
 	if err := proto.Unmarshal(metadata, &msg); err != nil {
-		return errors.New("metadados de áudio inválidos")
+		return localization.New("archive.invalid_audio_metadata")
 	}
 	if msg.GetFileLength() > maxAudioBytes {
-		return errors.New("áudio excede limite de download")
+		return localization.New("archive.audio_exceeds_the_download_limit")
 	}
 	if !c.protocol().IsConnected() {
 		return archive.ErrAudioOffline
@@ -58,7 +59,7 @@ func (c *Client) DownloadAudio(ctx context.Context, metadata []byte, path string
 		if !c.protocol().IsConnected() {
 			return archive.ErrAudioOffline
 		}
-		return errors.New("download de áudio indisponível")
+		return localization.New("archive.audio_download_unavailable")
 	}
 	return file.Sync()
 }

@@ -1,30 +1,30 @@
-name: Problema
-description: Relate um comportamento inesperado com dados fictícios.
+name: Bug report
+description: Report unexpected behavior using synthetic data.
 body:
   - type: markdown
     attributes:
-      value: 'Não envie bancos, sessões, QR, mensagens ou tokens reais. Vulnerabilidades devem usar Security → Report a vulnerability, após ativação do canal privado.'
+      value: 'Never send real databases, sessions, QR codes, messages, or tokens. Use Security > Report a vulnerability after the private channel is enabled.'
   - type: textarea
     id: environment
     attributes:
-      label: Ambiente e versão
-      description: Sistema, versão do wpp, modo CLI/web e comando sanitizado.
+      label: Environment and version
+      description: System, wpp version, CLI/web mode, and sanitized command.
     validations:
       required: true
   - type: textarea
     id: reproduction
     attributes:
-      label: Como reproduzir
-      description: Passos mínimos com conteúdo fictício.
+      label: Steps to reproduce
+      description: Minimal steps with fictitious content.
     validations:
       required: true
   - type: textarea
     id: behavior
     attributes:
-      label: Resultado esperado e observado
+      label: Expected and observed results
     validations:
       required: true
   - type: textarea
     id: checks
     attributes:
-      label: Logs sanitizados e validações
+      label: Sanitized logs and validation

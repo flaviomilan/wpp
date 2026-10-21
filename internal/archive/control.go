@@ -5,20 +5,23 @@ import (
 	"encoding/json"
 	"errors"
 	"time"
+	"wpp/internal/localization"
 )
 
 type Operation struct {
-	ID        string    `json:"id"`
-	Source    string    `json:"source_id,omitempty"`
-	Kind      string    `json:"kind"`
-	Chat      string    `json:"chat,omitempty"`
-	State     string    `json:"state"`
-	Phase     string    `json:"phase"`
-	Detail    string    `json:"detail"`
-	Started   time.Time `json:"started"`
-	Updated   time.Time `json:"updated"`
-	Total     int       `json:"total"`
-	Completed int       `json:"completed"`
+	ID               string            `json:"id"`
+	Source           string            `json:"source_id,omitempty"`
+	Kind             string            `json:"kind"`
+	Chat             string            `json:"chat,omitempty"`
+	State            string            `json:"state"`
+	Phase            string            `json:"phase"`
+	DetailCode       string            `json:"detail_code,omitempty"`
+	DetailParameters map[string]string `json:"detail_parameters,omitempty"`
+	Detail           string            `json:"detail"`
+	Started          time.Time         `json:"started"`
+	Updated          time.Time         `json:"updated"`
+	Total            int               `json:"total"`
+	Completed        int               `json:"completed"`
 }
 
 func migrateControl(tx *sql.Tx) error {
@@ -125,7 +128,8 @@ func (s *Store) InterruptOperations() error {
 			}
 			if op.State == "queued" || op.State == "running" {
 				op.State = "interrupted"
-				op.Detail = "Execução interrompida. Solicite novamente para continuar."
+				op.DetailCode = "operation.interrupted"
+				op.Detail = localization.Text(localization.English, op.DetailCode, nil)
 				op.Updated = time.Now().UTC()
 				updates = append(updates, op)
 			}

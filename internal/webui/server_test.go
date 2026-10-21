@@ -40,7 +40,7 @@ func TestPanelReadWriteBoundary(t *testing.T) {
 		t.Fatal(r.Code)
 	}
 	home := call("GET", "/", "", "127.0.0.1:8080", "", nil)
-	if home.Code != 200 || !strings.Contains(home.Body.String(), "Cadastro de pessoas") {
+	if home.Code != 200 || !strings.Contains(home.Body.String(), "People directory") {
 		t.Fatal(home.Code)
 	}
 	cookie := home.Result().Cookies()[0]

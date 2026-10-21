@@ -5,9 +5,11 @@ import (
 	"errors"
 	"github.com/google/uuid"
 	"sort"
+	"strconv"
 	"sync"
 	"time"
 	"wpp/internal/archive"
+	"wpp/internal/localization"
 )
 
 type operationStore interface {
@@ -52,7 +54,7 @@ func (m *operationManager) submit(kind, chat, source string, fn func(context.Con
 	m.mu.Lock()
 	if m.closed {
 		m.mu.Unlock()
-		return archive.Operation{}, conflict("O painel está encerrando.")
+		return archive.Operation{}, conflict("backend.the_panel_is_shutting_down")
 	}
 	for _, t := range m.active {
 		if t.op.Kind == kind && t.op.Chat == chat && t.op.Source == source {
@@ -63,11 +65,12 @@ func (m *operationManager) submit(kind, chat, source string, fn func(context.Con
 	}
 	if len(m.active) >= m.limit {
 		m.mu.Unlock()
-		return archive.Operation{}, conflict("A fila de operações está cheia. Aguarde uma execução terminar e tente novamente.")
+		return archive.Operation{}, conflict("backend.the_operation_queue_is_full_wait_for_an_operation_to")
 	}
 	ctx, cancel := context.WithCancel(m.ctx)
 	now := time.Now().UTC()
-	t := &task{op: archive.Operation{ID: uuid.NewString(), Kind: kind, Chat: chat, Source: source, State: "queued", Phase: "queued", Detail: "Aguardando execução.", Started: now, Updated: now}, cancel: cancel}
+	t := &task{op: archive.Operation{ID: uuid.NewString(), Kind: kind, Chat: chat, Source: source, State: "queued", Phase: "queued", Detail: "backend.waiting_to_run", Started: now, Updated: now}, cancel: cancel}
+	prepareOperation(&t.op)
 	if err := m.store.SaveOperation(t.op); err != nil {
 		cancel()
 		m.mu.Unlock()
@@ -81,7 +84,7 @@ func (m *operationManager) submit(kind, chat, source string, fn func(context.Con
 	go func() {
 		defer m.wg.Done()
 		defer cancel()
-		err := m.update(t, "running", "starting", "Preparando execução.", 0, 0)
+		err := m.update(t, "running", "starting", "backend.preparing_the_operation", 0, 0)
 		if err == nil {
 			err = fn(ctx, t)
 		}
@@ -92,13 +95,13 @@ func (m *operationManager) submit(kind, chat, source string, fn func(context.Con
 		switch {
 		case t.failure != nil:
 			t.op.State = "failed"
-			t.op.Detail = "Falha ao persistir a operação. Confira o armazenamento."
+			t.op.Detail = "backend.failed_to_save_the_operation_check_storage"
 		case persistenceFailure(err):
 			t.op.State = "failed"
 			t.op.Detail = operationError(err)
 		case ctx.Err() != nil:
 			t.op.State = "cancelled"
-			t.op.Detail = "Execução cancelada. Dados recebidos foram preservados."
+			t.op.Detail = "backend.operation_cancelled_received_data_was_preserved"
 		case err != nil:
 			t.op.State = "failed"
 			t.op.Detail = operationError(err)
@@ -116,12 +119,14 @@ func (m *operationManager) submit(kind, chat, source string, fn func(context.Con
 	return op, nil
 }
 func (m *operationManager) writeLocked(t *task) error {
+	prepareOperation(&t.op)
 	err := m.store.SaveOperation(t.op)
 	if err != nil {
 		t.failure = errors.Join(t.failure, &archive.PersistenceError{Err: err})
 		m.shutdownErr = errors.Join(m.shutdownErr, t.failure)
 		t.op.State = "failed"
-		t.op.Detail = "Falha ao persistir a operação. Confira o armazenamento."
+		t.op.Detail = "backend.failed_to_save_the_operation_check_storage"
+		prepareOperation(&t.op)
 		m.unsaved[t.op.ID] = t.op
 		t.cancel()
 	} else {
@@ -141,7 +146,7 @@ func (m *operationManager) update(t *task, state, phase, detail string, total, c
 
 func (m *operationManager) updateLocked(t *task, state, phase, detail string, total, completed int) error {
 	if m.active[t.op.ID] != t {
-		return conflict("A operação já terminou ou não existe.")
+		return conflict("backend.the_operation_has_finished_or_does_not_exist")
 	}
 	if t.failure != nil {
 		return t.failure
@@ -152,6 +157,8 @@ func (m *operationManager) updateLocked(t *task, state, phase, detail string, to
 	t.op.State = state
 	t.op.Phase = phase
 	t.op.Detail = detail
+	t.op.DetailCode = ""
+	t.op.DetailParameters = nil
 	t.op.Total = total
 	t.op.Completed = completed
 	t.op.Updated = time.Now().UTC()
@@ -166,10 +173,10 @@ func (m *operationManager) cancel(id string) error {
 	t := m.active[id]
 	if t == nil {
 		m.mu.Unlock()
-		return conflict("A operação já terminou ou não existe.")
+		return conflict("backend.the_operation_has_finished_or_does_not_exist")
 	}
 	t.cancel()
-	err := m.updateLocked(t, "running", "cancelling", "Cancelando execução; preservando os dados recebidos.", t.op.Total, t.op.Completed)
+	err := m.updateLocked(t, "running", "cancelling", "backend.cancelling_the_operation_preserving_received_data", t.op.Total, t.op.Completed)
 	m.mu.Unlock()
 	if persistenceFailure(err) {
 		m.fault(err)
@@ -198,7 +205,7 @@ func (m *operationManager) progress(source, phase string) error {
 	if found == nil {
 		return nil
 	}
-	return m.update(found, "running", phase, "Processando o áudio selecionado.", 1, 0)
+	return m.update(found, "running", phase, "backend.processing_the_selected_audio", 1, 0)
 }
 func (m *operationManager) snapshot() ([]archive.Operation, error) {
 	ops, err := m.store.Operations()
@@ -235,4 +242,12 @@ func (m *operationManager) close() error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	return m.shutdownErr
+}
+
+func prepareOperation(op *archive.Operation) {
+	if localization.Known(op.Detail) {
+		op.DetailCode = op.Detail
+		op.DetailParameters = map[string]string{"total": strconv.Itoa(op.Total), "completed": strconv.Itoa(op.Completed)}
+		op.Detail = localization.Text(localization.English, op.DetailCode, op.DetailParameters)
+	}
 }

@@ -7,17 +7,20 @@ import (
 	"fmt"
 	"strings"
 	"unicode/utf8"
+	"wpp/internal/localization"
 )
 
 type BrowserMessage struct {
-	SourceID         string        `json:"source_id"`
-	Message          Message       `json:"message"`
-	Route            string        `json:"route"`
-	Author           string        `json:"author"`
-	ReplyAuthor      string        `json:"reply_author"`
-	Reply            *BrowserReply `json:"reply,omitempty"`
-	PreviewTruncated bool          `json:"preview_truncated"`
-	AudioState       string        `json:"audio_state,omitempty"`
+	SourceID          string             `json:"source_id"`
+	Message           Message            `json:"message"`
+	RoutePresentation *RoutePresentation `json:"route_presentation,omitempty"`
+	Route             string             `json:"route"`
+	AuthorCode        string             `json:"author_code,omitempty"`
+	Author            string             `json:"author"`
+	ReplyAuthor       string             `json:"reply_author"`
+	Reply             *BrowserReply      `json:"reply,omitempty"`
+	PreviewTruncated  bool               `json:"preview_truncated"`
+	AudioState        string             `json:"audio_state,omitempty"`
 }
 type MessagePage struct {
 	Items  []BrowserMessage `json:"items"`
@@ -28,7 +31,7 @@ type MessagePage struct {
 func (s *Store) BrowseMessages(chat, query, person string, offset, limit int) (MessagePage, error) {
 	page := MessagePage{Items: []BrowserMessage{}, Offset: offset}
 	if offset < 0 || limit < 1 || limit > 100 || len(query) > 512 {
-		return page, invalidInput("filtro ou paginação inválidos")
+		return page, invalidInput("archive.invalid_filter_or_pagination")
 	}
 	names, err := s.Names()
 	if err != nil {
@@ -40,7 +43,7 @@ func (s *Store) BrowseMessages(chat, query, person string, offset, limit int) (M
 			if !errors.Is(e, sql.ErrNoRows) {
 				return e
 			}
-			return invalidInput("conversa não encontrada")
+			return invalidInput("archive.chat_not_found")
 		}
 		if person != "" {
 			var e error
@@ -69,6 +72,7 @@ func (s *Store) BrowseMessages(chat, query, person string, offset, limit int) (M
 				break
 			}
 			item.Route = route(item.Message, names)
+			item.RoutePresentation = browserRoute(item.Message, names)
 			item.Author = personLabel(names, item.Message.Sender, item.Message.Author)
 			if item.Message.ReplySender != "" {
 				item.ReplyAuthor = personLabel(names, item.Message.ReplySender, "")
@@ -141,7 +145,7 @@ func (s *Store) SetPersonName(group, id, name string) error {
 		return err
 	}
 	if !validPerson(id) {
-		return invalidInput("ID de pessoa inválido")
+		return invalidInput("archive.invalid_person_id")
 	}
 	return s.transaction(func(tx *sql.Tx) error {
 		var exists int
@@ -149,7 +153,7 @@ func (s *Store) SetPersonName(group, id, name string) error {
 			if !errors.Is(err, sql.ErrNoRows) {
 				return err
 			}
-			return invalidInput("pessoa não encontrada neste grupo")
+			return invalidInput("archive.person_not_found_in_this_group")
 		}
 		id, err := canonical(tx, id)
 		if err != nil {
@@ -172,9 +176,10 @@ var inspectionTables = map[string]string{
 }
 
 type TableInfo struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Count       int    `json:"count"`
+	Name            string `json:"name"`
+	Description     string `json:"description"`
+	DescriptionCode string `json:"description_code,omitempty"`
+	Count           int    `json:"count"`
 }
 type TablePage struct {
 	Columns []string `json:"columns"`
@@ -186,12 +191,12 @@ type TablePage struct {
 func (s *Store) Tables() ([]TableInfo, error) {
 	out := []TableInfo{}
 	err := s.transaction(func(tx *sql.Tx) error {
-		for name, description := range inspectionTables {
+		for name := range inspectionTables {
 			var count int
 			if e := tx.QueryRow("SELECT COUNT(*) FROM " + name).Scan(&count); e != nil {
 				return e
 			}
-			out = append(out, TableInfo{name, description, count})
+			out = append(out, TableInfo{Name: name, Description: localization.Text(localization.English, "table."+name, nil), DescriptionCode: "table." + name, Count: count})
 		}
 		return nil
 	})
@@ -200,10 +205,10 @@ func (s *Store) Tables() ([]TableInfo, error) {
 func (s *Store) InspectTable(name string, offset, limit int) (TablePage, error) {
 	page := TablePage{Columns: []string{}, Rows: [][]any{}, Offset: offset}
 	if _, ok := inspectionTables[name]; !ok {
-		return page, invalidInput("tabela não disponível para consulta")
+		return page, invalidInput("archive.table_not_available_for_inspection")
 	}
 	if offset < 0 || limit < 1 || limit > 100 {
-		return page, invalidInput("paginação inválida")
+		return page, invalidInput("archive.invalid_pagination")
 	}
 	err := s.transaction(func(tx *sql.Tx) error {
 		query := fmt.Sprintf("SELECT * FROM %s ORDER BY rowid LIMIT ? OFFSET ?", name)
@@ -247,4 +252,23 @@ func (s *Store) InspectTable(name string, offset, limit int) (TablePage, error) 
 		return rows.Err()
 	})
 	return page, err
+}
+
+// RoutePresentation separates application labels from unmodified participant names.
+type RoutePresentation struct {
+	From     string `json:"from"`
+	To       string `json:"to"`
+	FromSelf bool   `json:"from_self"`
+	ToSelf   bool   `json:"to_self"`
+	Group    bool   `json:"group"`
+}
+
+func browserRoute(m Message, names map[string]string) *RoutePresentation {
+	result := &RoutePresentation{From: personLabel(names, m.Sender, m.Author), To: personLabel(names, m.Chat, ""), Group: m.Group}
+	result.FromSelf = m.FromMe && names[m.Sender] == "" && m.Author == ""
+	if !m.Group && !m.FromMe {
+		result.ToSelf = true
+		result.To = names[names["self_id"]]
+	}
+	return result
 }

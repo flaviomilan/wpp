@@ -14,7 +14,9 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
+	"wpp/internal/localization"
 
 	"wpp/internal/archive"
 	"wpp/internal/service"
@@ -24,11 +26,13 @@ import (
 var assets embed.FS
 
 type Server struct {
-	Store   *archive.Store
-	token   string
-	port    string
-	zone    string
-	control *service.Controller
+	Store            *archive.Store
+	token            string
+	port             string
+	zone             string
+	control          *service.Controller
+	languageOverride string
+	preferencesMu    sync.RWMutex
 }
 
 func New(store *archive.Store, port string, controls ...*service.Controller) *Server {
@@ -43,18 +47,18 @@ func New(store *archive.Store, port string, controls ...*service.Controller) *Se
 	return s
 }
 
-func ServeControlled(ctx context.Context, store *archive.Store, address string, ready func(string), zone *time.Location, control *service.Controller) error {
-	return serveControlled(ctx, store, address, ready, zone, control, net.Listen)
+func ServeControlled(ctx context.Context, store *archive.Store, address string, ready func(string), zone *time.Location, control *service.Controller, languages ...string) error {
+	return serveControlled(ctx, store, address, ready, zone, control, net.Listen, languages...)
 }
 
-func serveControlled(ctx context.Context, store *archive.Store, address string, ready func(string), zone *time.Location, control *service.Controller, listen func(string, string) (net.Listener, error)) (resultErr error) {
+func serveControlled(ctx context.Context, store *archive.Store, address string, ready func(string), zone *time.Location, control *service.Controller, listen func(string, string) (net.Listener, error), languages ...string) (resultErr error) {
 	host, _, err := net.SplitHostPort(address)
 	if err != nil {
-		return errors.New("endereço inválido; use 127.0.0.1:8080")
+		return localization.New("backend.invalid_address_use_127_0_0_1_8080")
 	}
 	ip := net.ParseIP(host)
 	if ip == nil || !ip.IsLoopback() {
-		return errors.New("a interface aceita apenas endereço IP de loopback, como 127.0.0.1:8080")
+		return localization.New("backend.the_interface_accepts_only_a_loopback_ip_address_such_as")
 	}
 	listener, err := listen("tcp", address)
 	if err != nil {
@@ -68,6 +72,9 @@ func serveControlled(ctx context.Context, store *archive.Store, address string, 
 	_, port, _ := net.SplitHostPort(listener.Addr().String())
 	ui := New(store, port, control)
 	ui.zone = zone.String()
+	if len(languages) > 0 && localization.Valid(languages[0]) {
+		ui.languageOverride = languages[0]
+	}
 	server := &http.Server{Handler: ui.Handler(), ReadHeaderTimeout: 5 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16384}
 	ready("http://" + listener.Addr().String())
 	return serveHTTP(ctx, server, listener, 5*time.Second)
@@ -77,10 +84,11 @@ func serveControlled(ctx context.Context, store *archive.Store, address string, 
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
 	s.controls(mux)
+	s.preferences(mux)
 	mux.HandleFunc("GET /api/audio", func(w http.ResponseWriter, r *http.Request) {
 		offset, limit, err := pagination(r)
 		if err != nil {
-			problem(w, 400, err.Error())
+			problemError(w, 400, err)
 			return
 		}
 		jobs, summary, err := s.Store.BrowseAudioPage(offset, limit+1, r.URL.Query().Get("chat"), r.URL.Query().Get("state"))
@@ -120,7 +128,7 @@ func (s *Server) Handler() http.Handler {
 			respondError(w, err)
 			return
 		}
-		respond(w, map[string]string{"status": "pending", "detail": "Áudio reenfileirado; o controlador externo realizará o processamento quando estiver habilitado."})
+		respond(w, map[string]string{"status": "pending", "detail": localization.Text(localization.English, "backend.audio_requeued_the_external_controller_will_process_it_when_enabled", nil), "detail_code": "backend.audio_requeued_the_external_controller_will_process_it_when_enabled"})
 	})
 	mux.HandleFunc("GET /api/audio/{source}", func(w http.ResponseWriter, r *http.Request) {
 		item, err := s.Store.BrowserAudioSource(r.PathValue("source"))
@@ -153,7 +161,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/chats/{chat}/messages", func(w http.ResponseWriter, r *http.Request) {
 		offset, limit, err := pagination(r)
 		if err != nil {
-			problem(w, 400, err.Error())
+			problemError(w, 400, err)
 			return
 		}
 		page, err := s.Store.BrowseMessages(r.PathValue("chat"), r.URL.Query().Get("q"), r.URL.Query().Get("person"), offset, limit)
@@ -179,11 +187,11 @@ func (s *Server) Handler() http.Handler {
 		decoder := json.NewDecoder(http.MaxBytesReader(w, r.Body, 4096))
 		decoder.DisallowUnknownFields()
 		if err := decoder.Decode(&person); err != nil {
-			problem(w, 400, "cadastro JSON inválido")
+			problemMessage(w, 400, "backend.invalid_person_registration_json")
 			return
 		}
 		if err := decoder.Decode(new(any)); err != io.EOF {
-			problem(w, 400, "cadastro deve conter um único objeto")
+			problemMessage(w, 400, "backend.registration_must_contain_a_single_object")
 			return
 		}
 		if err := s.Store.SetPersonName(r.PathValue("group"), person.ID, person.Name); err != nil {
@@ -204,7 +212,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/tables/{table}", func(w http.ResponseWriter, r *http.Request) {
 		offset, limit, err := pagination(r)
 		if err != nil {
-			problem(w, 400, err.Error())
+			problemError(w, 400, err)
 			return
 		}
 		page, err := s.Store.InspectTable(r.PathValue("table"), offset, limit)
@@ -230,7 +238,7 @@ func (s *Server) Handler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		host, port, err := net.SplitHostPort(r.Host)
 		if err != nil || port != s.port || (host != "127.0.0.1" && host != "localhost" && host != "::1") {
-			problem(w, 403, "host inválido")
+			problemMessage(w, 403, "backend.invalid_host")
 			return
 		}
 		w.Header().Set("Cache-Control", "no-store")
@@ -244,7 +252,7 @@ func (s *Server) Handler() http.Handler {
 				return
 			}
 			if r.Method != "GET" && r.Method != "HEAD" && r.Header.Get("Origin") != "http://"+r.Host {
-				problem(w, 403, "origem da alteração inválida")
+				problemMessage(w, 403, "backend.invalid_mutation_origin")
 				return
 			}
 		}
@@ -258,17 +266,17 @@ func pagination(r *http.Request) (int, int, error) {
 	if value := r.URL.Query().Get("offset"); value != "" {
 		offset, err = strconv.Atoi(value)
 		if err != nil {
-			return 0, 0, errors.New("offset inválido")
+			return 0, 0, localization.New("backend.invalid_offset")
 		}
 	}
 	if value := r.URL.Query().Get("limit"); value != "" {
 		limit, err = strconv.Atoi(value)
 		if err != nil {
-			return 0, 0, errors.New("limit inválido")
+			return 0, 0, localization.New("backend.invalid_limit")
 		}
 	}
 	if offset < 0 || limit < 1 || limit > 100 {
-		return 0, 0, errors.New("paginação inválida")
+		return 0, 0, localization.New("backend.invalid_pagination")
 	}
 	return offset, limit, nil
 }
@@ -286,7 +294,7 @@ func problem(w http.ResponseWriter, status int, message string) {
 
 func publicAsset(path string) bool {
 	switch path {
-	case "/", "/app.js", "/style.css", "/api.mjs", "/dom.mjs", "/requests.mjs", "/chats.mjs", "/people.mjs", "/audio.mjs", "/settings.mjs", "/activity.mjs", "/inspector.mjs", "/navigation.mjs":
+	case "/messages.mjs", "/preferences.mjs", "/i18n.mjs", "/", "/app.js", "/style.css", "/api.mjs", "/dom.mjs", "/requests.mjs", "/chats.mjs", "/people.mjs", "/audio.mjs", "/settings.mjs", "/activity.mjs", "/inspector.mjs", "/navigation.mjs":
 		return true
 	default:
 		return false

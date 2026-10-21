@@ -64,6 +64,7 @@ type Attempt struct {
 	Anchor            string
 	AnchorKey         string
 	State             string
+	DetailCode        string `json:"detail_code,omitempty"`
 	Detail            string
 	BoundaryObserved  bool
 }

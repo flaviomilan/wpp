@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"wpp/internal/localization"
 
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/proto/waE2E"
@@ -30,7 +31,7 @@ type historyBatch struct {
 
 var configureDevice sync.Once
 
-var ErrSessionRevoked = errors.New("sessão revogada; execute wpp login novamente")
+var ErrSessionRevoked = localization.New("archive.session_revoked_run_wpp_login_again")
 
 // networkClient contains only protocol operations that require a connection.
 // Persistence and normalization continue through the concrete local client.
@@ -129,7 +130,7 @@ func (c *Client) event(evt any) (success bool) {
 	switch e := evt.(type) {
 	case *events.Connected:
 		if c.WA.Store.ID == nil {
-			c.fatal(errors.New("sessão sem identificador"))
+			c.fatal(localization.New("archive.session_has_no_identifier"))
 			return
 		}
 		if err := c.Archive.BindAccount(jid(*c.WA.Store.ID)); err != nil {
@@ -138,7 +139,7 @@ func (c *Client) event(evt any) (success bool) {
 		}
 		if !c.WA.Store.LID.IsEmpty() {
 			if err := c.Archive.Alias(jid(c.WA.Store.LID), jid(*c.WA.Store.ID)); err != nil {
-				c.fatal(errors.New("falha ao persistir identidade da conta"))
+				c.fatal(localization.New("archive.failed_to_save_account_identity"))
 				return
 			}
 		}
@@ -149,13 +150,13 @@ func (c *Client) event(evt any) (success bool) {
 	case *events.LoggedOut:
 		c.fatal(ErrSessionRevoked)
 	case *events.TemporaryBan:
-		c.fatal(errors.New("conexão suspensa pelo WhatsApp; captura encerrada"))
+		c.fatal(localization.New("archive.connection_suspended_by_whatsapp_capture_stopped"))
 	case *events.StreamReplaced:
-		c.fatal(errors.New("sessão conectada em outro processo; captura encerrada"))
+		c.fatal(localization.New("archive.session_connected_in_another_process_capture_stopped"))
 	case *events.ConnectFailure:
-		c.fatal(errors.New("falha de autenticação/conexão; verifique a sessão"))
+		c.fatal(localization.New("archive.authentication_or_connection_failed_check_the_session"))
 	case *events.ClientOutdated:
-		c.fatal(errors.New("cliente incompatível; atualize a dependência whatsmeow"))
+		c.fatal(localization.New("archive.incompatible_client_update_the_whatsmeow_dependency"))
 	case *events.Disconnected:
 		select {
 		case c.Offline <- struct{}{}:
@@ -163,17 +164,17 @@ func (c *Client) event(evt any) (success bool) {
 		}
 	case *events.Message:
 		if err := c.aliasSource(e.Info); err != nil {
-			c.fatal(errors.New("falha ao persistir identidades"))
+			c.fatal(localization.New("archive.failed_to_save_identities"))
 			return
 		}
 		m, ok, err := c.normalize(e)
 		if err != nil {
-			c.fatal(errors.New("falha ao interpretar mensagem"))
+			c.fatal(localization.New("archive.failed_to_interpret_message"))
 			return
 		}
 		if ok {
 			if _, err = c.Archive.Ingest([]archive.Message{m}); err != nil {
-				c.fatal(errors.New("falha ao persistir mensagem; captura encerrada"))
+				c.fatal(localization.New("archive.failed_to_save_message_capture_stopped"))
 			} else {
 				select {
 				case c.Activity <- m.Chat:
@@ -183,7 +184,7 @@ func (c *Client) event(evt any) (success bool) {
 		}
 	case *events.UndecryptableMessage:
 		if err := c.aliasSource(e.Info); err != nil {
-			c.fatal(errors.New("falha ao persistir identidades"))
+			c.fatal(localization.New("archive.failed_to_save_identities"))
 			return
 		}
 		m, ok, err := Normalize(&events.Message{Info: e.Info})
@@ -191,20 +192,20 @@ func (c *Client) event(evt any) (success bool) {
 			_, err = c.Archive.Ingest([]archive.Message{m})
 		}
 		if err != nil {
-			c.fatal(errors.New("falha ao persistir mensagem indisponível"))
+			c.fatal(localization.New("archive.failed_to_save_unavailable_message"))
 		}
 	case *events.HistorySync:
 		if err := c.history(e); err != nil {
-			c.fatal(errors.New("falha ao persistir histórico; captura encerrada"))
+			c.fatal(localization.New("archive.failed_to_save_history_capture_stopped"))
 		}
 	case *events.JoinedGroup:
 		if err := c.Archive.Discover(jid(e.JID), e.Name); err != nil {
-			c.fatal(errors.New("falha ao persistir grupo"))
+			c.fatal(localization.New("archive.failed_to_save_group"))
 		}
 	case *events.GroupInfo:
 		if e.Name != nil {
 			if err := c.Archive.Discover(jid(e.JID), e.Name.Name); err != nil {
-				c.fatal(errors.New("falha ao atualizar nome do grupo"))
+				c.fatal(localization.New("archive.failed_to_update_group_name"))
 			}
 		}
 	}
@@ -317,7 +318,7 @@ func (c *Client) history(e *events.HistorySync) error {
 		case c.histories <- historyBatch{session: e.Notification.GetPeerDataRequestSessionID(), messages: batch}:
 		default:
 			if c.Fail != nil {
-				c.Fail("Respostas de histórico excederam a fila; tentativa ficará sem confirmação.")
+				c.Fail("archive.history_queue_full")
 			}
 		}
 	}
@@ -331,7 +332,7 @@ func (c *Client) History(ctx context.Context, anchor archive.Message) ([]archive
 	defer c.historyMu.Unlock()
 	var info types.MessageInfo
 	if len(anchor.Wire) == 0 {
-		return nil, errors.New("sem referência de protocolo")
+		return nil, localization.New("archive.no_protocol_reference")
 	}
 	if err := json.Unmarshal(anchor.Wire, &info); err != nil {
 		return nil, err
@@ -340,7 +341,7 @@ func (c *Client) History(ctx context.Context, anchor archive.Message) ([]archive
 	defer cancel()
 	response, err := c.protocol().SendPeerMessage(ctx, c.protocol().BuildHistorySyncRequest(&info, 50))
 	if err != nil {
-		return nil, errors.New("solicitação de histórico falhou")
+		return nil, localization.New("archive.history_request_failed")
 	}
 	for {
 		select {
@@ -377,7 +378,7 @@ func (c *Client) History(ctx context.Context, anchor archive.Message) ([]archive
 func (c *Client) Discover(ctx context.Context) error {
 	groups, err := c.protocol().GetJoinedGroups(ctx)
 	if err != nil {
-		return errors.New("não foi possível listar grupos")
+		return localization.New("archive.could_not_list_groups")
 	}
 	if err = c.discoverGroupNames(ctx, groups, c.protocol().GetGroupInfo); err != nil {
 		return err
@@ -419,7 +420,7 @@ func (c *Client) discoverGroupNames(ctx context.Context, groups []*types.GroupIn
 				g.Participants = details.Participants
 			}
 			if name == "" && c.Fail != nil {
-				c.Fail("Nome de grupo indisponível; a identificação por ID foi preservada.")
+				c.Fail("archive.group_name_unavailable")
 			}
 		}
 		if err := c.Archive.Discover(jid(g.JID), name); err != nil {

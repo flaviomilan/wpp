@@ -1,3 +1,4 @@
+import {createTranslator} from "../assets/i18n.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {createRequests} from "../assets/requests.mjs";
@@ -15,11 +16,12 @@ class Node {
 function fixture(api){
  const nodes=new Map();
  const $=id=>{if(!nodes.has(id))nodes.set(id,new Node());return nodes.get(id);};
- const ctx={
+ const translator=createTranslator("pt-BR");
+ const ctx={number:value=>String(value),kindLabel:kind=>kind,translator,t:translator.text,bindText:(node,fn)=>{node.textContent=fn();},bindAttribute:(node,name,fn)=>node.setAttribute(name,fn()),
   model:{state:{view:"groups",chats:[{ID:"T@g.us",Name:"Tracked",Tracked:true,Count:0},{ID:"A@g.us",Name:"Available",Tracked:false,Count:0}],chat:"T@g.us",offset:0,version:0,people:[]},
    chatTab:"tracked",chatTabs:{tracked:{query:"",type:"all",chat:"T@g.us",messageQuery:"filter T",person:"",offset:0,scroll:20},available:{query:"",type:"all",chat:"A@g.us",messageQuery:"filter A",person:"",offset:0,scroll:100}},serviceState:{owner:true},timezone:"UTC"},
   document:{activeElement:null},requests:createRequests(),$,api,
-  el:(_tag,text)=>{const node=new Node();node.textContent=text;return node;},
+  el:(_tag,text)=>{const node=new Node();node.textContent=typeof text==="function"?text():text;return node;},
   button:()=>new Node(),safely:fn=>Promise.resolve().then(fn),options:()=>{},
   groupPath:id=>"/people/"+id,openPerson(){},record(){},openMessageDetail(){}
  };

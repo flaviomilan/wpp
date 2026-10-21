@@ -2,9 +2,11 @@ package webui
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"wpp/internal/archive"
+	"wpp/internal/localization"
 	"wpp/internal/service"
 )
 
@@ -16,20 +18,43 @@ func respondError(w http.ResponseWriter, err error) {
 	var validation *archive.ValidationError
 	switch {
 	case errors.As(err, &storage):
-		problem(w, 500, "Falha de armazenamento. Confira o estado do serviço.")
+		problemMessage(w, 500, "backend.storage_failure_check_the_service_status")
 	case errors.Is(err, sql.ErrNoRows):
-		problem(w, 404, "Registro não encontrado no arquivo.")
+		problemMessage(w, 404, "backend.record_not_found_in_the_archive")
 	case errors.Is(err, service.ErrReadOnly):
-		problem(w, 409, service.ErrReadOnly.Error())
+		problemMessage(w, 409, "backend.another_capture_process_controls_this_directory_stop_it_and_reopen")
 	case errors.As(err, &validation):
-		problem(w, 400, validation.Message)
+		if validation.Code != "" {
+			problemMessage(w, 400, validation.Code)
+		} else {
+			problem(w, 400, validation.Message)
+		}
 	case errors.As(err, &application):
 		status := 400
 		if application.Conflict {
 			status = 409
 		}
-		problem(w, status, application.Message)
+		if application.Code != "" {
+			problemMessage(w, status, application.Code)
+		} else {
+			problem(w, status, application.Message)
+		}
 	default:
-		problem(w, 500, "Não foi possível executar a operação. Confira o estado do serviço.")
+		problemMessage(w, 500, "backend.could_not_perform_the_operation_check_the_service_status")
 	}
+}
+
+func problemMessage(w http.ResponseWriter, status int, code string) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(status)
+	_ = json.NewEncoder(w).Encode(map[string]string{"error": localization.Text(localization.English, code, nil), "code": code})
+}
+
+func problemError(w http.ResponseWriter, status int, err error) {
+	var message *localization.MessageError
+	if errors.As(err, &message) {
+		problemMessage(w, status, message.Key)
+		return
+	}
+	problem(w, status, err.Error())
 }

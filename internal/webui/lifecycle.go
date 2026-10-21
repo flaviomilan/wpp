@@ -21,7 +21,7 @@ func (l *requestLifecycle) wrap(next http.Handler) http.Handler {
 		l.mu.Lock()
 		if l.closing {
 			l.mu.Unlock()
-			http.Error(w, "O painel está encerrando.", http.StatusServiceUnavailable)
+			problemMessage(w, http.StatusServiceUnavailable, "backend.the_panel_is_shutting_down")
 			return
 		}
 		l.active.Add(1)

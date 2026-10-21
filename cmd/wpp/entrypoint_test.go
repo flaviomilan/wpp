@@ -32,7 +32,7 @@ func TestMainSuccessfulOfflineCommand(t *testing.T) {
 		t.Fatal(err)
 	}
 	raw, err := io.ReadAll(output)
-	if err != nil || !strings.Contains(string(raw), "100 registros") {
+	if err != nil || !strings.Contains(string(raw), "100 recent records") {
 		t.Fatal(string(raw), err)
 	}
 }
@@ -66,7 +66,7 @@ func TestStatusIncludesMessageBoundsAndRecoveryAttempts(t *testing.T) {
 	if err = printStatus(store, &output, time.UTC); err != nil {
 		t.Fatal(err)
 	}
-	for _, expected := range []string{"Mensagens: 1", "2023-11-14T22:13:20Z", "Verificar lacuna", "Demandas (group@g.us)"} {
+	for _, expected := range []string{"Messages: 1", "2023-11-14T22:13:20Z", "Verificar lacuna", "Demandas (group@g.us)"} {
 		if !strings.Contains(output.String(), expected) {
 			t.Fatal("missing status", expected, output.String())
 		}
@@ -89,7 +89,7 @@ func TestMainFailureExit(t *testing.T) {
 	command.Env = append(os.Environ(), "WPP_TEST_MAIN_FAILURE=1")
 	raw, err := command.CombinedOutput()
 	var exit *exec.ExitError
-	if !errors.As(err, &exit) || exit.ExitCode() != 1 || !strings.Contains(string(raw), "Erro: comando desconhecido") {
+	if !errors.As(err, &exit) || exit.ExitCode() != 1 || !strings.Contains(string(raw), "Error: unknown command") {
 		t.Fatal(string(raw), err)
 	}
 }
@@ -111,7 +111,7 @@ func TestWaitOnlineSignalsAndTimeout(t *testing.T) {
 					cancel()
 				}
 				err := waitOnline(ctx, client)
-				if scenario == "online" && err != nil || scenario == "fatal" && !errors.Is(err, failure) || scenario == "cancel" && !errors.Is(err, context.Canceled) || scenario == "timeout" && (err == nil || !strings.Contains(err.Error(), "tempo limite")) {
+				if scenario == "online" && err != nil || scenario == "fatal" && !errors.Is(err, failure) || scenario == "cancel" && !errors.Is(err, context.Canceled) || scenario == "timeout" && (err == nil || !strings.Contains(err.Error(), "timed out")) {
 					t.Fatal(scenario, err)
 				}
 			})
@@ -131,7 +131,7 @@ func TestOfflineErrorsDoNotCreateData(t *testing.T) {
 		}
 	}
 	var out bytes.Buffer
-	if err := execute(context.Background(), []string{"--help"}, &out, &out); err != nil || !strings.Contains(out.String(), "Comandos:") {
+	if err := execute(context.Background(), []string{"--help"}, &out, &out); err != nil || !strings.Contains(out.String(), "Commands:") {
 		t.Fatal(out.String(), err)
 	}
 }

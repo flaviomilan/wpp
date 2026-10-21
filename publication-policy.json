@@ -1,11 +1,11 @@
 {
   "approved_png_sha256": {
-    "docs/images/ajustes-1440.png": "33764ddab2ecf746dfe6dd15646b3f71d29fca223478a1672723751ac2e3eea7",
-    "docs/images/ajustes-360.png": "1b56967e798e1fe8a09297855365d884fa9c33e6c288b065b939a0de388532a6",
-    "docs/images/ajustes-768.png": "a2b49ad17833a2bd8dd6ac63a05c00b68e2e4096f19e3305509e1ca4d106b977",
-    "docs/images/painel-compacto-dark.png": "0feeaac704b9c88a811df33e5abd39e64ddf9f5d1ffeca321a0e2bd1a9d57e53",
-    "docs/images/painel-dark.png": "287295d2472a7fa0384522d437f3be71d101cf8f3abc42f8890d59cf4df7d281",
-    "docs/images/painel-light.png": "46834ec0447e4e27ec93c2f3ab9657fc70a3c2933ff5650347edc73a41f25ac9"
+    "docs/images/settings-1440.png": "d9c8598fcb5c4b3f1b473631b32b54fe143c3a1572d8b3c99f1c9e2cba5da832",
+    "docs/images/settings-360.png": "ec9a4630d2b98aa5e13d3ac53d40f37b5f8c153cf2e3d5f0f6e05d87035d8f8d",
+    "docs/images/settings-768.png": "16c524af0d3e3c1849ac4a520796ee5e3ceb54c51290021c619540471bc1151e",
+    "docs/images/workspace-compact-dark.png": "9446ca46153c7f8e6fb2d70d796c66c554b9b00afbae908598247919517f4055",
+    "docs/images/workspace-dark.png": "acbb2bb04a07a16ad0690777a594ace43b8fa332aaf2a89249b8b0a8bee7ee70",
+    "docs/images/workspace-light.png": "f76f8351cf3b81f3dac835652fcf6dab8d1d9212160cbaa0de2e20d3fd8778f8"
   },
   "approved_fixture_sha256": {
     "docs/examples/events-1.0.jsonl": "7c0bad739e8e5224bf68e837c2fab36b07ad1e93adfbadfee4957b7e037f7fc6"

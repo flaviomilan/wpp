@@ -1,155 +1,132 @@
-# Painel de controle local
+# Local web workspace
 
-HTML, CSS e JavaScript estão embutidos no executável Go. `wpp serve` controla conexão, captura, histórico, transcrição e exportação no mesmo processo, sem Node.js ou serviço do sistema.
+HTML, CSS, and JavaScript are embedded in the Go executable. `wpp serve` controls connection, capture, history, transcription, and export in the same process, without Node.js or a system service.
 
-## Navegação e ajustes
+## Navigation and settings
 
-A navegação mantém **Conversas**, **Áudios**, **Pessoas** e **Atividade**, com **Ajustes** ao final. Em telas compactas, abra **Menu**; Escape fecha e devolve o foco. Em telas estreitas, lista e conversa aparecem separadas: **Voltar às conversas** retorna à lista. A seleção, buscas e posição de leitura permanecem durante a troca de áreas. Os atalhos usam fragmentos locais, como `#settings/transcription`; voltar/avançar do navegador funciona sem iniciar ou cancelar tarefas.
+Navigation keeps **Chats**, **Audio**, **People**, **Activity**, and **Settings** available. On compact screens, open **Menu**; Escape closes it and returns focus. On narrow screens, **Back to chats** returns from the reading pane to the list. Selection, searches, and reading position survive navigation. Local routes such as `#settings/transcription` support browser back/forward without starting or cancelling tasks.
 
-Ajustes tem cinco categorias, acessíveis pelo índice da própria página:
-
-| Categoria | Conteúdo |
+| Settings category | Contents |
 |---|---|
-| Conta | Vínculo da conta, reconexão e QR temporário |
-| Captura | Captura contínua e explicação do processo local |
-| Transcrição | Controle automático, idioma, vocabulário e opções técnicas |
-| Dados e exportação | Exportação completa, backup e opções de inicialização |
-| Avançado | Inspetor do banco somente consulta |
+| Account | Account linking, reconnection, temporary QR |
+| Capture | Continuous capture and local process explanation |
+| Transcription | Automatic processing, audio language, vocabulary, technical options |
+| Data and export | Complete exports, backup, startup options |
+| Advanced | Application language and read-only database inspector |
 
-O resumo acima do conteúdo mostra captura e transcrição e oferece **Controles de captura** e **Ver atividade**. Na fila de Áudios, **Configurar transcrição** abre a categoria correspondente. O próximo passo aparece conforme a conta e as conversas acompanhadas, sem impedir consulta offline ou exigir instalar áudio.
+The summary strip offers **Capture controls** and **View activity**. **Configure transcription** in Audio opens the appropriate settings. Onboarding follows actual account/tracking state and permits offline reading without an audio installation.
 
-O painel acompanha o tema claro/escuro do sistema, aceita teclado e respeita movimento reduzido. Diálogos podem ser fechados com Escape, com retorno de foco. Campos editados não são substituídos pelo polling; sair de uma edição oferece **Continuar editando** ou **Descartar alterações**. Salvar é explícito e erros preservam o rascunho. Não há salvamento automático em armazenamento do navegador.
+The panel follows the system light/dark theme, supports keyboard navigation and reduced motion, and returns focus when closing dialogs with Escape. Polling does not replace edited fields. Leaving an edited form offers **Continue editing** or **Discard changes**; saving is explicit and failures retain drafts. No settings are automatically saved in browser storage.
 
-![Ajustes em tela estreita, com dados fictícios](images/ajustes-360.png)
+![Settings on a narrow screen with synthetic data](images/settings-360.png)
 
-## Começar
+## Application language
+
+A data directory without a language preference starts in English, regardless of browser or operating-system locale. Under **Settings > Advanced > Application language**, select **English** or **Português (Brasil)** and choose **Save language**. The choice is persisted in the archive's presentation metadata and shared with CLI commands using the same data directory.
+
+Language selection also works in consultation mode and without an account or valid audio engine. It does not submit audio settings, start processing, change recognition language or time zone, or translate messages/transcripts/names. Switching preserves navigation, reading position, filters, focus, and unrelated drafts. Failed saves keep the previous effective language and retain the proposed selection for retry. Unsaved language selections use the same continue/discard navigation flow.
+
+CLI equivalents are `wpp language`, `wpp language pt-BR`, and `wpp language en`. Global `--language en|pt-BR` overrides one invocation. When starting `serve`, it also supplies the initial panel language; an explicit panel save replaces that initial override for the browser session without implicitly persisting the override itself. Already-running CLI processes retain their invocation language. Dates follow the application language and existing configured time zone.
+
+## Getting started
 
 ```bash
 ./wpp serve
-# Abra http://127.0.0.1:8080
+# Open http://127.0.0.1:8080
+./wpp --data-dir ./data --export-dir ./exports --listen 127.0.0.1:8090 serve
 ```
 
-Opções globais ficam antes do comando:
+Global options precede the command. Initially **Continuous capture** is paused and **Automatic transcription** is enabled with Portuguese recognition and portable Whisper `large-v3-turbo` paths. Unavailable engine/model paths are explained in Settings without blocking text capture. Default installation paths are relative to the parent of `--data-dir`; use absolute paths for custom installations.
 
-```bash
-./wpp --data-dir ./dados --export-dir ./markdown --listen 127.0.0.1:8090 serve
-```
+1. Open **Settings > Account > Connect WhatsApp**.
+2. On your phone, open **WhatsApp > Linked devices > Link a device** and scan the QR. WhatsApp renews it; it disappears on expiry, cancellation, or completion.
+3. Use **Refresh chats** to discover available groups, contacts, and names.
+4. Select a chat and choose **Track**.
+5. Use **Sync now** for a one-off operation or enable **Continuous capture**.
 
-Na primeira execução, **Captura contínua** começa pausada e **Transcrição automática** fica habilitada, com português e caminhos da instalação portátil do Whisper `large-v3-turbo`. Se modelo/executáveis estiverem indisponíveis, Ajustes explica o problema; mensagens continuam podendo ser capturadas. Caminhos padrão da instalação são relativos ao diretório pai de `--data-dir`; com diretórios personalizados, configure caminhos absolutos em Ajustes.
+Closing the tab does not stop tasks. Ctrl+C stops the process, cancels operations/subprocesses, finishes accepted writes, and tries pending exports. Preferences persist: restarting `serve` resumes capture if it was enabled. Disable it before shutdown to restart paused.
 
-1. Em **Ajustes → Conta**, clique em **Conectar WhatsApp**.
-2. No celular, abra **WhatsApp → Dispositivos conectados → Conectar dispositivo** e leia o QR. Ele é renovado conforme o WhatsApp e desaparece ao expirar, cancelar ou concluir.
-3. Use **Atualizar conversas** para descobrir grupos, contatos e nomes disponíveis.
-4. Selecione uma conversa e clique em **Acompanhar**.
-5. Use **Sincronizar agora** para uma execução pontual ou habilite **Captura contínua**.
+## Chats and reading
 
-Fechar a aba não interrompe tarefas. Ctrl+C no terminal encerra o processo, cancela operações e subprocessos, conclui gravações aceitas e tenta exportar alterações pendentes. As escolhas ficam salvas no SQLite: reiniciar `serve` retoma a captura se estava habilitada. Para reiniciar pausado, desative o controle antes de encerrar.
+The list opens in **Tracked**. **Available** contains only untracked chats. Each tab preserves its search and All types/Groups/Contacts filters across navigation and refresh. The full ID is in the chat header details. **Stop tracking** preserves messages, transcripts, evidence, and batches while preventing future ingestion and new audio reservations for that chat, including during capture.
 
-## Conversas e leitura
+Messages are newest first, 50 per page. Search text/transcripts and filter by sender. Authorship uses person-to-group routing. Replies show the quoted author and preview; opening the quote displays its original message without leaving the chat. Audio quotes use an available transcript. Edits/deletions are indicated, while absent or ambiguous references remain unavailable without invented authorship. Technical IDs live in details.
 
-A lista abre na aba **Acompanhadas**. **Disponíveis** reúne apenas conversas ainda não acompanhadas, para consultar e adicionar. Cada aba preserva sua busca e filtro Todos os tipos, Grupos ou Contatos durante a navegação e atualização. O ID completo fica no detalhe do cabeçalho. **Parar acompanhamento** preserva mensagens, transcrições, evidências e lotes; impede ingestão futura daquela conversa e novas reservas de áudio. Funciona durante a captura.
+Visible pages poll every two seconds. The latest page can update when reading at the top; earlier reading is preserved and an explicit **New messages available · Show** action offers refresh. **Identify person** opens sender registration. **View record** shows normalized data and evidence ID. Text previews respect UTF-8 and a 12,000-byte limit, with a visible truncation notice; full content remains stored. Attachments show available metadata. Only eligible audio is temporarily downloaded.
 
-Mensagens aparecem das mais recentes para as mais antigas, em páginas de 50. Busque texto/transcrições e filtre pelo remetente. Autoria é exibida como **pessoa → grupo**; respostas mostram um bloco com autor e conteúdo da mensagem citada. Clique no bloco para abrir a mensagem original sem sair da conversa. Citações de áudio usam a transcrição disponível; edições e exclusões são sinalizadas. Referências ausentes ou ambíguas aparecem como indisponíveis, sem autoria inventada. IDs técnicos ficam no detalhe.
+## Capture, sync, and pause
 
-A página consulta estados a cada dois segundos enquanto visível. Seleção, filtros e leitura anterior são preservados. A primeira página pode atualizar quando está no topo; ao consultar conteúdo anterior, um aviso permite atualizar explicitamente.
+**Continuous capture** connects and receives tracked chats. A scheduler requests history and retries periodically. Pausing stops automatic recovery, without cancelling an explicit sync. Undownloaded audio waits for resume or another sync.
 
-**Identificar pessoa** abre o cadastro do remetente. **Ver registro** mostra registro normalizado e ID da evidência. A prévia textual tem limite de 12.000 bytes, respeitando UTF-8 e sinalizando o limite; o conteúdo integral permanece no banco. Anexos mostram metadados disponíveis. Apenas áudios elegíveis são baixados temporariamente pelo worker.
+**Sync now** requires a tracked chat but works with capture paused. It retrieves available history, then fixes a finite list of eligible audio for that chat. Each item gets one attempt during that operation; arrivals do not grow the list indefinitely. Missing metadata, failures, and outstanding items remain visible. With capture active, explicit sync takes priority after the current audio.
 
-## Captura, sincronização e pausas
+During a one-off connection, delivered messages from other tracked chats are also preserved. On completion or cancellation the connection remains only if the current capture choice requires it; changing the control during the operation is respected. Repeated sync requests reuse the existing operation. **Cancel** cancels that operation. Overlap, batch completion, and operational success never certify full history coverage.
 
-**Captura contínua** conecta e recebe mensagens das conversas acompanhadas. O agendador solicita histórico e tenta novamente periodicamente. Pausar interrompe a recuperação automática; não cancela sincronização pontual. Áudios ainda não baixados aguardam retomada ou nova sincronização.
+## Audio and processing settings
 
-**Sincronizar agora** exige conversa acompanhada e funciona com captura pausada. Busca o histórico disponível e então fixa uma lista de áudios elegíveis daquela conversa. Cada item tem uma tentativa nessa execução. A lista não cresce indefinidamente com novas mensagens; falhas, ausência de metadados e pendências são sinalizadas. Com captura ativa, tem prioridade depois do áudio atual.
+Audio cards show chat, author, time, attempts, errors, and completed transcript previews. **View transcript** opens the full text with copy. Filters, focus, and open details survive updates. Real phases are download, conversion, recognition, and saving; percentages are not estimated.
 
-Durante uma conexão pontual, mensagens entregues de outras conversas acompanhadas também são preservadas. Ao terminar ou cancelar, a conexão permanece somente se a escolha atual de captura pedir isso. Alterar o controle durante a operação é respeitado.
+**Retry** is available after the first failure and after permanent failures if download metadata exists. In an owning panel it processes only that audio, temporarily connecting if capture is paused, without fetching all history or enabling capture. It waits for the current worker and is cancellable. If transcription is paused, it requeues and asks you to enable processing and request again. An active background queue can process it after resume. Untracked chats must be tracked; missing metadata needs another sync. Completed/deleted/already-processing audio is not reprocessed. Consultation mode only requeues.
 
-Cliques repetidos numa sincronização solicitada devolvem a mesma operação. **Cancelar** interrompe aquela execução. Histórico integral nunca é confirmado por sobreposição, término de lote ou sucesso operacional; a cobertura continua não confirmada.
+Pausing **Automatic transcription** prevents new reservations and lets current audio finish. Engine failure never stops text capture. Under **Settings > Transcription > Model and advanced options**, configure audio language, vocabulary, model, Whisper/FFmpeg, threads, and timeout. The controller validates before saving; rejected settings preserve persisted values and the editable draft. Vocabulary guides recognition, without summarizing requests. See [Transcription](transcription.md) for installation, limits, and retention.
 
-## Áudios e ajustes
+**Activity** shows real phases, results, and cancellation. Interrupted operations are marked on restart; explicit syncs are not automatically restarted. New application diagnostics use stable translation identifiers. Legacy free-form operation details are retained as evidence, while the panel uses safe localized status summaries.
 
-**Áudios** apresenta cartões com conversa, autor, data, tentativas e erros. Transcrições concluídas têm prévia no cartão e **Ver transcrição** abre o texto integral com opção de copiar. A tela preserva filtros, foco e o detalhe aberto durante atualizações. É possível filtrar por conversa e estado e consultar etapas reais: download, conversão, reconhecimento e gravação. Não há porcentagem estimada. **Tentar novamente** está disponível após o primeiro erro e também nas falhas definitivas, quando há descritor disponível. Processa somente o áudio escolhido, com conexão temporária se a captura estiver pausada, sem buscar todo o histórico ou ativar captura contínua. A tentativa aguarda o worker atual e pode ser cancelada pela operação. A pausa global da transcrição é respeitada: nesse caso, reenfileira e orienta a ativar o controle e solicitar novamente o áudio. Com captura contínua ativa, a fila também pode processá-lo automaticamente após a retomada. Conversas desativadas precisam ser acompanhadas antes do processamento. Metadados ausentes exigem nova sincronização; áudios concluídos/excluídos ou já em processamento não são reprocessados.
+## Export
 
-Pausar **Transcrição automática** impede novas reservas e deixa o áudio atual terminar. Falhas do motor não interrompem captura de textos.
+**Export JSONL** in a chat and **Settings > Data and export > Export all** rebuild complete event history from SQLite without connecting to WhatsApp. Files are `exports/chat-<hash>.jsonl`, using the incremental batches' contract. They never acknowledge batches or advance consumer cursors. **View record** offers `wpp evidence <group> <source>` for JSONL evidence. Legacy Markdown files are retained without regeneration.
 
-Em **Ajustes → Transcrição → Modelo e opções avançadas**, configure idioma, vocabulário, modelo, Whisper, FFmpeg, threads e timeout. O controlador valida motor/modelo antes de salvar. Configurações inválidas preservam as anteriores; mudanças valem para próximos áudios. O vocabulário orienta reconhecimento, sem resumir demandas. Consulte [Transcrição](transcricao.md) para instalação, limites e retenção.
+## People and evidence
 
-A área **Atividade** mostra etapa, resultado e cancelamento das operações. Operações interrompidas por encerramento forçado aparecem como interrompidas na próxima inicialização; sincronizações pontuais não reiniciam automaticamente.
+Open **People**, or **People in this chat**; choose a group, find a person by name/number/LID, choose **Edit name**, and save a recognizable name. Received and registered names have separate columns; registered names take precedence, and unnamed IDs remain visible.
 
-## Exportação
+**Register person** accepts a full `@s.whatsapp.net` or `@lid` ID not already in the list. It creates a local association, not a WhatsApp group member. Names allow up to 128 characters without controls; empty names remove existing registrations. Names apply across the account's groups. Proven WhatsApp LID/phone aliases reconcile registration; existing canonical registration wins conflicts. Unproven identities remain separate.
 
-**Exportar JSONL** na conversa e **Exportar todas** em Ajustes → Dados e exportação reconstroem o histórico completo de eventos a partir do SQLite, sem conectar ao WhatsApp. Os arquivos são `exports/chat-<hash>.jsonl` e usam o mesmo contrato dos lotes incrementais.
+The list reflects observed messages, reply references, and received group metadata, not certified current membership. Names affect presentation, not historical events or published batch bytes. Identity uses native IDs and proven aliases, never names alone. wpp does not generate people directories or demand memory in Markdown.
 
-Essas ações não confirmam lotes nem avançam o cursor do consumidor. **Ver registro** fornece `wpp evidence <grupo> <fonte>`, que agora exporta JSONL. Arquivos Markdown antigos são mantidos como legado, sem regeneração.
+## Inspector and protection
 
-## Pessoas
+**Settings > Advanced > Database · Read only** browses allowed tables with pagination and bounded cell previews. It offers no arbitrary SQL or editing. Session data, private configuration, media descriptors, and tokens are excluded.
 
-1. Abra **Pessoas** ou **Cadastrar pessoas** na conversa.
-2. Escolha o grupo.
-3. Localize a pessoa pelo nome, número ou LID e clique em **Editar nome**.
-4. Informe um nome reconhecível e salve.
+The server accepts loopback only, validates Host/port, requires an HttpOnly/SameSite Strict cookie and matching origin for mutations, and keeps QR codes out of logs and operations. Text enters the DOM without HTML interpretation; there are no external scripts. This is not authenticated remote access.
 
-Há colunas separadas para o nome recebido e o nome cadastrado. O cadastro tem precedência sobre o nome recebido. IDs sem um nome disponível continuam visíveis.
+## Process conflicts and architecture
 
-Para alguém ainda ausente da lista, use **Cadastrar pessoa**, informando o ID completo `@s.whatsapp.net` ou `@lid`. Esse cadastro adiciona uma associação local; não adiciona participantes ao WhatsApp. Nomes admitem até 128 caracteres, sem caracteres de controle. Salvar um nome vazio remove um cadastro existente.
+The owner holds `data/wpp.lock` even while paused. Another `run` or `serve` prevents concurrent ownership. A second panel permits reading, people registration, eligible requeue, and language preferences, but blocks connection, tracking, sync, processing settings, and exports. Stop the owner and restart the desired panel to take control. There is no external process termination, automatic takeover, or reason to delete lock files. Analysis uses separate per-group locks.
 
-O nome vale para a identidade em todos os grupos da conta. Quando o WhatsApp informa que um LID corresponde a um número, o cadastro é reconciliado com esse número. Em conflito, prevalece o nome já cadastrado na identidade canônica. Identidades sem uma associação comprovada permanecem separadas.
+`internal/service` coordinates both `serve` and `run`. HTTP calls Go directly; tasks use process context and survive completed requests. History is serialized, the audio worker is single, and exports are coordinated. Schema 7 upgrades preserve session, messages, identities, sources, revisions, and batches. Stop old versions and back up before migration.
 
-A lista reúne pessoas observadas nas mensagens, referências de respostas e metadados recebidos do grupo. Ela não comprova a composição atual do grupo.
+## Internal HTTP interfaces
 
+All routes require the local cookie; mutations require matching origin. Async operations return 202 with an ID and expose progress through `GET /api/service`.
 
-## Nomes e evidências
-
-Nomes cadastrados afetam a apresentação no painel, não o conteúdo histórico dos eventos ou os bytes de lotes publicados. A identidade continua baseada em IDs nativos e aliases comprovados, nunca apenas em nomes. O wpp não gera diretório de pessoas nem memória de demandas em Markdown.
-
-## Inspetor e proteção
-
-**Ajustes → Avançado → Banco de dados · Somente consulta** navega nas tabelas permitidas, com paginação e prévias limitadas de células. Não aceita SQL livre nem edição de registros. `session.db`, configurações privadas, descritores de mídia e tokens ficam fora do inspetor.
-
-O servidor aceita somente loopback, valida Host/porta, exige cookie HttpOnly/SameSite Strict e origem correspondente em todas as mutações. QR exige cookie e não fica em logs ou operações. Textos entram no DOM sem interpretação de HTML; não há scripts externos. A interface não oferece acesso remoto autenticado.
-
-## Conflito entre processos
-
-O controlador adquire `data/wpp.lock` mesmo pausado. Outro `run` ou `serve` no diretório impede execução concorrente. O segundo painel permite consulta, cadastro de pessoas e retry, mas bloqueia conexão, acompanhamento, sincronização, ajustes de execução e exportação.
-
-Encerre o processo responsável e reinicie o painel desejado para assumir controle. Não há encerramento de processos externos ou tomada automática do lock. Não apague arquivos de lock. Análise usa locks próprios por grupo.
-
-## Arquitetura e migração
-
-`internal/service` coordena o controlador compartilhado por `serve` e `run`. HTTP chama métodos Go diretamente; tarefas usam contexto do processo e continuam após a requisição terminar. Histórico é serializado, worker de áudio é único e exportações são coordenadas.
-
-A abertura migra transacionalmente para o esquema **7**, incluindo o diário de eventos, os lotes JSONL e os nomes de exportação `.jsonl`. Sessão, mensagens, identidades, fontes, revisões e lotes são preservados. Encerre versões antigas e faça backup antes de migrar.
-
-## Interfaces HTTP internas
-
-Exigem cookie local; mutações exigem origem correspondente. Operações assíncronas retornam HTTP 202 com ID. Resultado/progresso ficam em `GET /api/service`.
-
-| Método | Caminho | Função |
+| Method | Route | Purpose |
 |---|---|---|
-| GET | `/api/service` | Estado, escolhas, capacidades e operações |
-| POST | `/api/session/pair` | Parear ou reconectar |
-| GET | `/api/session/qr` | PNG privado, 404 se indisponível |
-| POST | `/api/chats/discover` | Descobrir conversas |
-| PUT | `/api/chats/{id}/tracking` | JSON `{"tracked":true}` |
-| PUT | `/api/service/capture` | JSON `{"enabled":true}` |
-| PUT | `/api/service/transcription` | JSON `{"enabled":true}` |
-| POST | `/api/chats/{id}/sync` | Histórico e lista finita de áudios |
-| POST | `/api/exports` | JSON `{"chat_id":"…"}`; `{}` exporta todas |
-| GET/PUT | `/api/service/settings` | Consultar/configurar motor/modelo |
-| POST | `/api/operations/{id}/cancel` | Cancelar operação |
-| GET | `/api/chats` | Conversas e contagens |
-| GET | `/api/chats/{id}/messages` | Filtros `q`, `person`, `offset`, `limit` |
-| GET/POST | `/api/groups/{id}/people` | Consultar/cadastrar nomes |
-| GET | `/api/audio` | Filtros `chat`, `state` e paginação |
-| POST | `/api/audio/{source}/retry` | Operação 202 no controlador proprietário; reenfileiramento 200 no painel em consulta |
-| GET | `/api/audio/{source}` | Detalhe público e transcrição integral |
-| GET | `/api/messages/{source}` | Mensagem original por fonte estável |
-| GET | `/api/tables` e `/api/tables/{nome}` | Inspetor permitido |
-| GET | `/api/settings` | Fuso de apresentação |
+| GET | `/api/service` | State, preferences, capabilities, operations |
+| GET/PUT | `/api/preferences` | Persisted `application_language`; GET also returns `initial_language` |
+| GET | `/api/translations` | Embedded public application message catalogs |
+| POST | `/api/session/pair` | Pair or reconnect |
+| GET | `/api/session/qr` | Private PNG; 404 when unavailable |
+| POST | `/api/chats/discover` | Discover chats |
+| PUT | `/api/chats/{id}/tracking` | `{"tracked":true}` |
+| PUT | `/api/service/capture` | `{"enabled":true}` |
+| PUT | `/api/service/transcription` | `{"enabled":true}` |
+| POST | `/api/chats/{id}/sync` | History and finite audio list |
+| POST | `/api/exports` | `{"chat_id":"…"}`; `{}` exports all |
+| GET/PUT | `/api/service/settings` | Read/configure engine/model |
+| POST | `/api/operations/{id}/cancel` | Cancel operation |
+| GET | `/api/chats` | Chats and counts |
+| GET | `/api/chats/{id}/messages` | `q`, `person`, `offset`, `limit` filters |
+| GET/POST | `/api/groups/{id}/people` | Read/register names |
+| GET | `/api/audio` | Chat/state filters and pagination |
+| POST | `/api/audio/{source}/retry` | Owning controller: 202 operation; consultation: 200 requeue |
+| GET | `/api/audio/{source}` | Public details and full transcript |
+| GET | `/api/messages/{source}` | Original message by stable source |
+| GET | `/api/tables`, `/api/tables/{name}` | Allowed inspector |
+| GET | `/api/settings` | Display time zone |
 
-Ajustes usam `whisper_path`, `ffmpeg_path`, `model_path`, `language`, `vocabulary`, `threads` e `timeout`. Campos de captura/transcrição enviados ali não substituem controles dedicados. Campos desconhecidos são rejeitados; corpo limitado a 16 KiB.
+Processing fields are `whisper_path`, `ffmpeg_path`, `model_path`, `language`, `vocabulary`, `threads`, and `timeout`. Capture/transcription fields in that form do not replace dedicated controls. Unknown fields are rejected; request bodies are limited to 16 KiB. Public errors retain safe `error` text and can add a stable `code`; operation details can add `detail_code` and safe parameters. Machine enum values and routes stay language independent.
 
-## Validação
+## Validation
 
-`make check` executa vet e testes com detector de corrida usando bancos temporários. Cobre preferências, conflitos, QR cancelado/expirado, sessão revogada, sincronização finita, pausa após áudio atual, ajustes inválidos e captura diante de falha do motor, além de armazenamento, lotes e proteção HTTP.
-
-A interface é validada com dados fictícios em desktop e tela estreita. Disponibilidade real de histórico, pareamento e mídia precisa ser conferida pelo titular com o celular; testes simulados não garantem comportamento da conta.
+`make check` runs vet and race-detected tests on temporary databases. Coverage includes preferences, ownership conflicts, cancelled/expired QR, revoked sessions, finite sync, pause after current audio, invalid settings, text capture with engine failure, storage, batches, and HTTP protections. Browser tests use synthetic desktop/narrow data. Real history, pairing, and media availability require the account holder's phone; mocks do not guarantee account behavior.

@@ -88,14 +88,14 @@ func TestLoginAndDiscoveryProtocolOutcomes(t *testing.T) {
 					t.Fatal("connection not closed")
 				}
 				if scenario == "success" || scenario == "discover-warning" {
-					if !discovered || !strings.Contains(out.String(), "Conta vinculada") {
+					if !discovered || !strings.Contains(out.String(), "Account linked") {
 						t.Fatal(out.String())
 					}
 				}
-				if scenario == "discover-warning" && !strings.Contains(stderr.String(), "Descoberta incompleta") {
+				if scenario == "discover-warning" && !strings.Contains(stderr.String(), "Discovery incomplete") {
 					t.Fatal(stderr.String())
 				}
-				if scenario == "chats" && (!reconnected || !discovered || !strings.Contains(out.String(), "ACOMPANHANDO")) {
+				if scenario == "chats" && (!reconnected || !discovered || !strings.Contains(out.String(), "TRACKED")) {
 					t.Fatal(out.String())
 				}
 				if (scenario == "connect-error" || scenario == "chats-connect-error") && strings.Contains(err.Error(), "private") {
@@ -109,7 +109,7 @@ func TestLoginAndDiscoveryProtocolOutcomes(t *testing.T) {
 func TestDefaultCLIConnectionRequiresLoginOffline(t *testing.T) {
 	var out bytes.Buffer
 	err := execute(context.Background(), []string{"--data-dir", t.TempDir(), "chats"}, &out, &out)
-	if err == nil || !strings.Contains(err.Error(), "login primeiro") {
+	if err == nil || !strings.Contains(err.Error(), "login first") {
 		t.Fatal(out.String(), err)
 	}
 }

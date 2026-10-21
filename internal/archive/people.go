@@ -103,7 +103,7 @@ func (s *Store) People(group string) (PeopleFile, error) {
 			if !errors.Is(err, sql.ErrNoRows) {
 				return err
 			}
-			return invalidInput("grupo não encontrado")
+			return invalidInput("archive.group_not_found")
 		}
 		rows, err := tx.Query("SELECT gp.person,COALESCE(p.name,''),COALESCE(NULLIF(c.name,''),gp.detected_name) FROM group_people gp LEFT JOIN people_names p ON p.id=gp.person LEFT JOIN chats c ON c.id=gp.person WHERE gp.chat=? ORDER BY gp.person", group)
 		if err != nil {
@@ -133,12 +133,12 @@ func (s *Store) RegisterPeople(file PeopleFile) (int, error) {
 			if !errors.Is(err, sql.ErrNoRows) {
 				return err
 			}
-			return invalidInput("grupo não encontrado")
+			return invalidInput("archive.group_not_found")
 		}
 		seen := map[string]string{}
 		for _, p := range file.People {
 			if !validPerson(p.ID) {
-				return invalidInput("cadastro contém ID de pessoa inválido; use o ID completo exportado")
+				return invalidInput("archive.registration_contains_an_invalid_person_id_use_the_full_exported")
 			}
 			id, err := canonical(tx, p.ID)
 			if err != nil {
@@ -149,16 +149,16 @@ func (s *Store) RegisterPeople(file PeopleFile) (int, error) {
 				continue
 			}
 			if !utf8.ValidString(name) || utf8.RuneCountInString(name) > 128 {
-				return invalidInput("nome deve ser UTF-8 válido e ter até 128 caracteres")
+				return invalidInput("archive.name_must_be_valid_utf_8_with_up_to_128")
 			}
 			for _, r := range name {
 				if unicode.IsControl(r) {
-					return invalidInput("nome não pode conter caracteres de controle")
+					return invalidInput("archive.name_cannot_contain_control_characters")
 				}
 			}
 			if old, exists := seen[id]; exists {
 				if old != name {
-					return invalidInput("mesma pessoa recebeu nomes diferentes no cadastro")
+					return invalidInput("archive.duplicate_person_names")
 				}
 				continue
 			}

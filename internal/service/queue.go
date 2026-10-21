@@ -34,7 +34,7 @@ func (q *workQueue) acquire(ctx context.Context, manual bool) (func(), error) {
 	}
 	if len(q.waiting) >= capacity {
 		q.mu.Unlock()
-		return nil, conflict("A fila de trabalho está cheia. Aguarde e tente novamente.")
+		return nil, conflict("backend.the_work_queue_is_full_wait_and_try_again")
 	}
 	q.waiting = append(q.waiting, r)
 	q.dispatch()

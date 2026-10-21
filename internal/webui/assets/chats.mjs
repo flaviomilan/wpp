@@ -3,9 +3,9 @@ export function createChats(ctx) {
 let chatRenderKey="";
 async function loadChats() {
  const token=ctx.requests.begin("chats");const chats=await ctx.api("/api/chats");if(!token.current())return;ctx.model.state.chats=chats||[];
- ctx.$("group-count").textContent=ctx.model.state.chats.filter(c=>c.ID.endsWith("@g.us")).length;
- ctx.$("message-count").textContent=ctx.model.state.chats.reduce((sum,c)=>sum+c.Count,0);
- ctx.$("tracked-count").textContent=ctx.model.state.chats.filter(c=>c.Tracked).length;
+ ctx.bindText(ctx.$("group-count"),()=>ctx.number(ctx.model.state.chats.filter(c=>c.ID.endsWith("@g.us")).length));
+ ctx.bindText(ctx.$("message-count"),()=>ctx.number(ctx.model.state.chats.reduce((sum,c)=>sum+c.Count,0)));
+ ctx.bindText(ctx.$("tracked-count"),()=>ctx.number(ctx.model.state.chats.filter(c=>c.Tracked).length));
  const selected=ctx.$("people-group").value;
  ctx.options(ctx.$("people-group"),ctx.model.state.chats.filter(c=>c.ID.endsWith("@g.us")).map(c=>({value:c.ID,label:(c.Name||c.ID)+" · "+c.ID})));
  if(ctx.model.state.chats.some(c=>c.ID===selected))ctx.$("people-group").value=selected;
@@ -15,15 +15,15 @@ async function loadChats() {
 }
 
 function visibleChats(){
- const query=ctx.$("chat-search").value.toLocaleLowerCase("pt-BR"),type=ctx.$("chat-filter").value;
- return ctx.model.state.chats.filter(c=>c.Tracked===(ctx.model.chatTab==="tracked")&&((c.Name||"")+" "+c.ID).toLocaleLowerCase("pt-BR").includes(query)&&(type==="all"||(type==="groups"&&c.ID.endsWith("@g.us"))||(type==="contacts"&&!c.ID.endsWith("@g.us"))));
+ const query=ctx.$("chat-search").value.toLowerCase(),type=ctx.$("chat-filter").value;
+ return ctx.model.state.chats.filter(c=>c.Tracked===(ctx.model.chatTab==="tracked")&&((c.Name||"")+" "+c.ID).toLowerCase().includes(query)&&(type==="all"||(type==="groups"&&c.ID.endsWith("@g.us"))||(type==="contacts"&&!c.ID.endsWith("@g.us"))));
 }
 
 function clearConversation(){
  ctx.model.state.chat="";ctx.model.state.offset=0;ctx.model.state.version++;ctx.model.displayedGeneration=-1;
- ctx.$("conversation-title").textContent="Selecione uma conversa";ctx.$("conversation-id").textContent="";
- ctx.$("messages").replaceChildren(ctx.el("div",ctx.model.chatTab==="tracked"?"Escolha uma conversa acompanhada ou abra Disponíveis para começar.":"Escolha uma conversa para consultar e acompanhar.","empty-state"));
- ctx.$("message-page").textContent="—";ctx.$("messages-prev").disabled=true;ctx.$("messages-next").disabled=true;
+ ctx.bindText(ctx.$("conversation-title"),()=>ctx.t("ui.select_a_chat"));ctx.bindText(ctx.$("conversation-id"),()=>"");
+ ctx.$("messages").replaceChildren(ctx.el("div",()=>ctx.model.chatTab==="tracked"?ctx.t("ui.choose_a_tracked_chat_or_open_available_to_get_started"):ctx.t("ui.choose_a_chat_to_read_and_track"),"empty-state"));
+ ctx.bindText(ctx.$("message-page"),()=>"—");ctx.$("messages-prev").disabled=true;ctx.$("messages-next").disabled=true;
  ctx.$("open-people").classList.add("hidden");ctx.$("new-messages").classList.add("hidden");updateChatControls();
 }
 
@@ -45,18 +45,18 @@ function renderChats() {
  const key=JSON.stringify([ctx.model.chatTab,ctx.model.state.chat,chats.map(c=>[c.ID,c.Name,c.Count,c.Tracked])]);
  if(chatRenderKey===key){updateChatControls();return;}chatRenderKey=key;
  const focused=document.activeElement?.dataset.chat,scroll=ctx.$("chat-list").scrollTop;
- ctx.$("chat-count").textContent=chats.length;ctx.$("chat-list").replaceChildren();
+ ctx.bindText(ctx.$("chat-count"),()=>ctx.number(chats.length));ctx.$("chat-list").replaceChildren();
  chats.forEach(chat=>{
   const node=ctx.el("button",undefined,"chat-item"+(ctx.model.state.chat===chat.ID?" selected":""));node.type="button";
   node.dataset.chat=chat.ID;
-  node.append(ctx.el("span",chat.ID.endsWith("@g.us")?"GR":"CT","avatar"));const info=ctx.el("span",undefined,"chat-info");
-  info.append(ctx.el("strong",chat.Name||"Sem nome"),ctx.el("small",chat.Count+" mensagens · "+(chat.Tracked?"acompanhada":"disponível")));node.append(info);
+  node.append(ctx.el("span",()=>chat.ID.endsWith("@g.us")?"GR":"CT","avatar"));const info=ctx.el("span",undefined,"chat-info");
+  info.append(ctx.el("strong",()=>chat.Name||ctx.t("ui.unnamed")),ctx.el("small",()=>ctx.number(chat.Count)+ctx.t("ui.messages_alternate")+(chat.Tracked?ctx.t("ui.tracked"):ctx.t("ui.available"))));node.append(info);
   node.onclick=()=>ctx.safely(()=>selectChat(chat.ID));ctx.$("chat-list").append(node);
   if(focused===chat.ID)node.focus({preventScroll:true});
  });
  if(!chats.length){
- const empty=ctx.el("div",ctx.model.chatTab==="tracked"?"Nenhuma conversa acompanhada com estes filtros.":"Nenhuma conversa disponível com estes filtros.","empty-state");
- if(ctx.model.chatTab==="tracked")empty.append(ctx.button("Explorar disponíveis",()=>ctx.safely(()=>switchChatTab("available"))));
+ const empty=ctx.el("div",()=>ctx.model.chatTab==="tracked"?ctx.t("ui.no_tracked_chats_match_these_filters"):ctx.t("ui.no_available_chats_match_these_filters"),"empty-state");
+ if(ctx.model.chatTab==="tracked")empty.append(ctx.button(()=>ctx.t("ui.browse_available"),()=>ctx.safely(()=>switchChatTab("available"))));
  ctx.$("chat-list").append(empty);
  }
  ctx.$("chat-list").scrollTop=scroll;
@@ -67,12 +67,12 @@ async function selectChat(id,transition=null,saved=null) {
  ctx.$("workspace").classList.add("reading");
  if(!transition)ctx.requests.invalidate();const token=transition||ctx.requests.begin("selection");
  ctx.model.state.chat=id;ctx.model.chatTabs[ctx.model.chatTab].chat=id;ctx.model.state.offset=saved?.offset||0;ctx.model.state.people=[];ctx.model.state.version++;renderChats();
- ctx.$("message-search").value=saved?.messageQuery||"";ctx.options(ctx.$("person-filter"),[],"Todos os remetentes");
+ ctx.$("message-search").value=saved?.messageQuery||"";ctx.options(ctx.$("person-filter"),[],()=>ctx.t("ui.all_senders"));
  const chat=ctx.chatByID(id);
  if(chat&&chat.ID.endsWith("@g.us")) {
   const people=(await ctx.api(ctx.groupPath(id))).people||[];
   if(!token.current()||ctx.model.state.chat!==id)return;ctx.model.state.people=people;
-  ctx.options(ctx.$("person-filter"),people.map(p=>({value:p.id,label:p.name||p.detected_name||p.id})),"Todos os remetentes");
+  ctx.options(ctx.$("person-filter"),people.map(p=>({value:p.id,label:p.name||p.detected_name||p.id})),()=>ctx.t("ui.all_senders"));
  }
  if(saved)ctx.$("person-filter").value=saved.person;
  if(ctx.model.state.view==="groups")await loadMessages();
@@ -82,7 +82,7 @@ async function selectChat(id,transition=null,saved=null) {
 async function loadMessages() {
  const chat=ctx.chatByID(ctx.model.state.chat);if(!chat)return;
  const token=ctx.requests.begin("messages");
- ctx.$("conversation-title").textContent=chat.Name||"Conversa sem nome";ctx.$("conversation-id").textContent=chat.ID;
+ ctx.bindText(ctx.$("conversation-title"),()=>chat.Name||ctx.t("ui.unnamed_chat"));ctx.bindText(ctx.$("conversation-id"),()=>chat.ID);
  ctx.$("open-people").classList.toggle("hidden",!chat.ID.endsWith("@g.us"));
  const query=new URLSearchParams({offset:ctx.model.state.offset,limit:50,q:ctx.$("message-search").value,person:ctx.$("person-filter").value});
  const page=await ctx.api("/api/chats/"+encodeURIComponent(chat.ID)+"/messages?"+query);
@@ -91,38 +91,38 @@ async function loadMessages() {
  ctx.model.state.more=page.more;ctx.$("messages").replaceChildren();
  page.items.forEach(item=>{
   const m=item.message,node=ctx.el("article",undefined,"message"),heading=ctx.el("div",undefined,"message-heading");
-  const date=ctx.el("time",new Date(m.Time).toLocaleString("pt-BR",{timeZone:ctx.model.timezone}));date.dateTime=m.Time;
-  heading.append(ctx.el("strong",item.route),date);node.append(heading);
+  const date=ctx.el("time",()=>new Date(m.Time).toLocaleString(ctx.translator.language,{timeZone:ctx.model.timezone}));date.dateTime=m.Time;
+  heading.append(ctx.el("strong",()=>item.route_presentation?ctx.renderRoute(item.route_presentation):item.route),date);node.append(heading);
   if(m.ReplyID||m.Kind==="reação"){
  const reply=item.reply;
  if(reply?.state==="available"){
- const quote=ctx.button("",()=>ctx.safely(()=>ctx.openMessageDetail(reply.source_id)));
- quote.className="quoted-message";quote.setAttribute("aria-label","Ver mensagem original de "+reply.author);
- if(m.Kind==="reação")quote.append(ctx.el("span","Reagiu à mensagem","helper"));
- quote.append(ctx.el("strong",reply.author+(reply.edited?" · editada":"")),ctx.el("span",reply.preview+(reply.truncated?"…":"")));
+ const quote=ctx.button(undefined,()=>ctx.safely(()=>ctx.openMessageDetail(reply.source_id)));
+ quote.className="quoted-message";ctx.bindAttribute(quote,"aria-label",()=>ctx.t("ui.view_original_message_from")+(reply.author_code?ctx.t(reply.author_code):reply.author));
+ if(m.Kind==="reação")quote.append(ctx.el("span",()=>ctx.t("ui.reacted_to_message"),"helper"));
+ quote.append(ctx.el("strong",()=>(reply.author_code?ctx.t(reply.author_code):reply.author)+(reply.edited?ctx.t("ui.edited_alternate"):"")),ctx.el("span",()=>reply.preview+(reply.truncated?"…":"")));
  node.append(quote);
- }else node.append(ctx.el("div",m.Kind==="reação"?"Mensagem reagida indisponível no arquivo":"Mensagem citada indisponível no arquivo","reply missing-quote"));
+ }else node.append(ctx.el("div",()=>m.Kind==="reação"?ctx.t("ui.reaction_target_unavailable_in_the_archive"):ctx.t("ui.quoted_message_unavailable_in_the_archive"),"reply missing-quote"));
  }
-  let text=m.Deleted?"[Mensagem excluída]":m.Text||"["+m.Kind+"]";
+  let text=m.Deleted?ctx.t("ui.deleted_message_alternate"):m.Text||"["+ctx.kindLabel(m.Kind)+"]";
   if(m.Caption)text+="\n"+m.Caption;if(m.FileName)text+="\nAnexo: "+m.FileName;
-  node.append(ctx.el("div",text,"message-text"));
-  if(!m.Deleted&&m.Transcript){node.append(ctx.el("div","Transcrição automática · "+m.Transcript.Model,"reply"),ctx.el("div",m.Transcript.Text,"message-text"));}
-  else if(!m.Deleted&&m.Kind==="áudio")node.append(ctx.el("div","Transcrição: "+(ctx.model.audioStates[item.audio_state]||"não disponível"),"reply"));
-  const meta=ctx.el("div",undefined,"message-meta");if(m.Edited)meta.append(ctx.el("span","Editada"));
-  if(item.preview_truncated)meta.append(ctx.el("span","Prévia limitada. Consulte a evidência completa."));
-  if(chat.ID.endsWith("@g.us")&&m.Sender)meta.append(ctx.button("Identificar pessoa",()=>ctx.openPerson(chat.ID,m.Sender)));
-  meta.append(ctx.button("Ver registro",()=>ctx.record({...item,evidence_command:chat.ID.endsWith("@g.us")?"wpp evidence "+chat.ID+" "+item.source_id:undefined})));
+  node.append(ctx.el("div",()=>text,"message-text"));
+  if(!m.Deleted&&m.Transcript){node.append(ctx.el("div",()=>ctx.t("ui.automatic_transcription_alternate")+m.Transcript.Model,"reply"),ctx.el("div",()=>m.Transcript.Text,"message-text"));}
+  else if(!m.Deleted&&m.Kind==="áudio")node.append(ctx.el("div",()=>ctx.t("ui.transcription_alternate")+(ctx.model.audioStates[item.audio_state]||ctx.t("ui.unavailable")),"reply"));
+  const meta=ctx.el("div",undefined,"message-meta");if(m.Edited)meta.append(ctx.el("span",()=>ctx.t("ui.edited")));
+  if(item.preview_truncated)meta.append(ctx.el("span",()=>ctx.t("ui.limited_preview_read_the_full_evidence")));
+  if(chat.ID.endsWith("@g.us")&&m.Sender)meta.append(ctx.button(()=>ctx.t("ui.identify_person"),()=>ctx.openPerson(chat.ID,m.Sender)));
+  meta.append(ctx.button(()=>ctx.t("ui.view_record"),()=>ctx.record({...item,evidence_command:chat.ID.endsWith("@g.us")?"wpp evidence "+chat.ID+" "+item.source_id:undefined})));
   node.append(meta);ctx.$("messages").append(node);
  });
- if(!page.items.length)ctx.$("messages").append(ctx.el("div","Nenhuma mensagem para estes filtros.","empty-state"));
+ if(!page.items.length)ctx.$("messages").append(ctx.el("div",()=>ctx.t("ui.no_messages_match_these_filters"),"empty-state"));
  ctx.$("messages-prev").disabled=ctx.model.state.offset===0;ctx.$("messages-next").disabled=!page.more;
- ctx.$("message-page").textContent="Página "+(ctx.model.state.offset/50+1)+" · mais recentes primeiro";
+ ctx.bindText(ctx.$("message-page"),()=>ctx.t("ui.page")+ctx.number(ctx.model.state.offset/50+1)+ctx.t("ui.newest_first"));
 }
 
 function updateChatControls(){
  const chat=ctx.chatByID(ctx.model.state.chat),owner=!!ctx.model.serviceState?.owner;
- ctx.$("track-chat").disabled=!owner||!chat;ctx.$("track-chat").textContent=chat?.Tracked?"Parar acompanhamento":"Acompanhar";
- const syncing=ctx.model.serviceState?.operations?.some(op=>op.kind==="sync"&&op.chat===ctx.model.state.chat&&["queued","running"].includes(op.state));ctx.$("sync-chat").disabled=!owner||!chat?.Tracked||syncing;ctx.$("sync-chat").textContent=syncing?"Sincronizando…":"Sincronizar agora";ctx.$("export-chat").disabled=!owner||!chat;
+ ctx.$("track-chat").disabled=!owner||!chat;ctx.bindText(ctx.$("track-chat"),()=>chat?.Tracked?ctx.t("ui.stop_tracking"):ctx.t("ui.track"));
+ const syncing=ctx.model.serviceState?.operations?.some(op=>op.kind==="sync"&&op.chat===ctx.model.state.chat&&["queued","running"].includes(op.state));ctx.$("sync-chat").disabled=!owner||!chat?.Tracked||syncing;ctx.bindText(ctx.$("sync-chat"),()=>syncing?ctx.t("ui.syncing"):ctx.t("ui.sync_now"));ctx.$("export-chat").disabled=!owner||!chat;
 }
 ctx.$("tab-tracked").onclick=()=>ctx.safely(()=>switchChatTab("tracked"));
 ctx.$("tab-available").onclick=()=>ctx.safely(()=>switchChatTab("available"));
